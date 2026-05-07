@@ -293,11 +293,6 @@ def get_bels(data):
                 cell['parameters'], cell['attributes'], sanitize_name(cellname), cell)
 
 _pip_bels = []
-
-# REG_SD RE Phase 2 patch: track FF/LUT placement to decide REG_SD value.
-_orphan_ffs_explicit = set()   # (row, col, ff_idx) — set by SEL->XD pip detection
-_placed_luts = set()           # (row, col, ff_idx) — set by place_lut
-_placed_dffs = set()           # (row, col, ff_idx) — set by place_dff
 def get_pips(data):
     pipre = re.compile(r"X(\d+)Y(\d+)/([\w_]+)/([\w_]+)")
     for net in data['modules']['top']['netnames'].values():
@@ -310,12 +305,6 @@ def get_pips(data):
                 # XD - input of the DFF
                 if src.startswith('XD'):
                     if dest.startswith('F'):
-                        continue
-                    # REG_SD Phase 5 patch (rescued 2026-05-07 from venv 2026-05-03):
-                    # SEL->XD route appears here as XD/SEL because JSON ROUTING is dst/src.
-                    # Yield to route() so its existing _orphan_ffs_explicit logic fires.
-                    if dest.startswith('SEL'):
-                        yield int(col) + 1, int(row) + 1, dest, src
                         continue
                     # pass-though LUT
                     num = dest[1]
@@ -3338,7 +3327,6 @@ def refine_io_attrs(attr):
     return _refine_attrs.get(attr, attr)
 
 def place_lut(db, tiledata, tile, parms, num, row, col, slice_attrvals):
-    _placed_luts.add((row, col, int(num)))
     lutmap = tiledata.bels[f'LUT{num}'].flags
     init = str(parms['INIT'])
     if len(init) > 16:
@@ -3399,7 +3387,6 @@ def place_alu(db, tiledata, tile, parms, num, row, col, slice_attrvals):
         alu_mode_attrs.update({'ALU_CIN_MUX': 'ALU_5A_CIN_COUT'})
 
 def place_dff(db, tiledata, tile, parms, num, mode, row, col, slice_attrvals, has_ce_port,  is_latch=False):
-        _placed_dffs.add((row, col, int(num)))
         dff_attrs = slice_attrvals.setdefault((row, col, int(num) // 2), {})
         dff_attrs.update({'REGMODE': 'LATCH' if is_latch else 'FF'})
         if has_ce_port:
@@ -4352,15 +4339,8 @@ def route(db, tilemap, pips):
                         if src not in srcs:
                             bits |= fuses
         except KeyError:
-            # F->XD: silent skip (default routing).
-            # SEL->XD: mark FF orphan so chipdb's REG_SD shortval entries fire.
-            if isinstance(src, str) and isinstance(dest, str):
-                import re as _re
-                m_sel = _re.match(r'^SEL(\d+)$', src)
-                m_xd = _re.match(r'^XD(\d+)$', dest)
-                if m_sel and m_xd and m_sel.group(1) == m_xd.group(1):
-                    ff_idx = int(m_sel.group(1))
-                    _orphan_ffs_explicit.add((row, col, ff_idx))
+            print(src, dest, "not found in tile", row, col)
+            breakpoint()
             continue
         for row, col in bits:
             tile[row][col] = 1
@@ -4568,7 +4548,6 @@ def set_adc_iobuf_fuses(db, tilemap):
 
 # set fuse for entire slice
 def set_slice_fuses(db, tilemap, slice_attrvals):
-    print("[reg_sd_debug] set_slice_fuses called with {} entries".format(len(slice_attrvals)))
     for pos, attrvals in slice_attrvals.items():
         row, col, num = pos
         if 'MODE' in attrvals and attrvals['MODE'] == 'SSRAM':
@@ -4583,25 +4562,6 @@ def set_slice_fuses(db, tilemap, slice_attrvals):
             attrvals.update({'REG1_REGSET': 'RESET'})
         if num == 0 and 'ALU_CIN_MUX' not in attrvals:
             attrvals.update({'ALU_CIN_MUX': 'ALU_5A_CIN_COUT'})
-
-        # REG_SD Phase 2 patch: for each FF in this CLS, determine paired vs orphan.
-        print("[reg_sd_debug] in set_slice_fuses pos={}".format(pos))
-        # Orphan iff (a) explicit SEL->XD pip used, or (b) DFF placed without LUT at same slot.
-        # Paired iff DFF placed AND LUT placed at same slot.
-        # No DFF: don't touch REG_SD attrvals.
-        for half in (0, 1):
-            ff_idx = 2 * num + half
-            if (row, col, ff_idx) not in _placed_dffs:
-                continue
-            is_orphan = (
-                (row, col, ff_idx) in _orphan_ffs_explicit or
-                (row, col, ff_idx) not in _placed_luts
-            )
-            attrvals['REG{}_SD'.format(half)] = '1' if is_orphan else '0'
-            if os.environ.get('CUBONE_REG_SD_DEBUG'):
-                print('[reg_sd] R{}C{} cls={} ff_half={} -> REG{}_SD={}'.format(
-                    row, col, num, half, half,
-                    '1 (orphan)' if is_orphan else '0 (paired)'))
 
         av = set()
         for attr, val in attrvals.items():
