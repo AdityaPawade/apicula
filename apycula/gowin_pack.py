@@ -311,6 +311,12 @@ def get_pips(data):
                 if src.startswith('XD'):
                     if dest.startswith('F'):
                         continue
+                    # REG_SD Phase 5 patch (rescued 2026-05-07 from venv 2026-05-03):
+                    # SEL->XD route appears here as XD/SEL because JSON ROUTING is dst/src.
+                    # Yield to route() so its existing _orphan_ffs_explicit logic fires.
+                    if dest.startswith('SEL'):
+                        yield int(col) + 1, int(row) + 1, dest, src
+                        continue
                     # pass-though LUT
                     num = dest[1]
                     init = {'A': '1010101010101010', 'B': '1100110011001100',
