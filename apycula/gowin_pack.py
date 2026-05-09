@@ -1232,6 +1232,32 @@ def set_bsram_attrs(db, cell, typ, params):
             if val in _bsram_bit_widths:
                 if val not in {32, 36}:
                     bsram_attrs[f'{typ}A_DATA_WIDTH'] = _bsram_bit_widths[val]
+                    # Codex round 17 fix: the original code never reached the
+                    # narrow-DP / 16-18 / 32-36 byte-enable branches for narrow
+                    # widths because they were nested inside the `else: val in
+                    # {32,36}` branch. For narrow DP widths (1/2/4/8/9), the
+                    # *_BEHB / *_BELB attributes were never written, so the
+                    # bitstream had byte-enable bits left at chip default and
+                    # writes silently failed. Gate behind env var
+                    # GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX=1 (off by default,
+                    # backward-compatible).
+                    _narrow_be_env = os.environ.get('GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX', '')
+                    _narrow_be_enabled = _narrow_be_env and _narrow_be_env.lower() not in ('0', 'false', 'no', 'off')
+                    if _narrow_be_enabled:
+                        if val in {16, 18}:
+                            if typ == 'SDP':
+                                sdp_16_18_byte_enable(typ, cell, bsram_attrs)
+                            elif typ == 'DP':
+                                dpa_16_18_byte_enable(typ, cell, bsram_attrs)
+                            else:
+                                raise Exception(f"BIT_WIDTH_0 for BSRAM type {typ} isn't supported (narrow-be-fix)")
+                        else:  # val in {1, 2, 4, 8, 9}
+                            if typ == 'SDP':
+                                sdp_1_2_4_8_9_byte_enable(typ, cell, bsram_attrs)
+                            elif typ == 'DP':
+                                dpa_1_2_4_8_9_byte_enable(typ, cell, bsram_attrs)
+                            else:
+                                raise Exception(f"BIT_WIDTH_0 for BSRAM type {typ} isn't supported (narrow-be-fix)")
                 else:
                     bsram_attrs['DBLWA'] = _bsram_bit_widths[val]
                     if val in {16, 18}:
@@ -1260,6 +1286,21 @@ def set_bsram_attrs(db, cell, typ, params):
             if val in _bsram_bit_widths:
                 if val not in {32, 36}:
                     bsram_attrs[f'{typ}B_DATA_WIDTH'] = _bsram_bit_widths[val]
+                    # Codex round 17 fix (mirror of BIT_WIDTH_0 fix above):
+                    # emit narrow-DP byte-enable attributes for B-side.
+                    _narrow_be_env = os.environ.get('GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX', '')
+                    _narrow_be_enabled = _narrow_be_env and _narrow_be_env.lower() not in ('0', 'false', 'no', 'off')
+                    if _narrow_be_enabled:
+                        if val in {16, 18}:
+                            if typ == 'DP':
+                                dpb_16_18_byte_enable(typ, cell, bsram_attrs)
+                            elif typ != 'SDP':
+                                raise Exception(f"BIT_WIDTH_1 for BSRAM type {typ} isn't supported (narrow-be-fix)")
+                        else:  # val in {1, 2, 4, 8, 9}
+                            if typ == 'DP':
+                                dpb_1_2_4_8_9_byte_enable(typ, cell, bsram_attrs)
+                            elif typ != 'SDP':
+                                raise Exception(f"BIT_WIDTH_1 for BSRAM type {typ} isn't supported (narrow-be-fix)")
                 else:
                     bsram_attrs['DBLWB'] = _bsram_bit_widths[val]
                     if val in {16, 18}:
