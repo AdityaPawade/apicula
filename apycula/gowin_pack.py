@@ -1345,7 +1345,15 @@ def set_bsram_attrs(db, cell, typ, params):
                 bsram_attrs[f'{typ}A_REGMODE'] = 'OUTREG'
                 bsram_attrs[f'{typ}B_REGMODE'] = 'OUTREG'
         elif parm == 'RESET_MODE':
-            if val == 'ASYNC':
+            # BRAM-MATCH-WORK 2026-05-11: GOWIN_BSRAM_FORCE_SYNC_RESET defaults to ON
+            # (forces all BSRAM cells to RESET_MODE=SYNC, matching Gowin EDA's universal
+            # choice across 31 decrypted .vg files). Hardware-verified alive-no-regression
+            # 2026-05-11 with variant 47c5e964. To opt-out (revert to legacy ASYNC
+            # behavior), set GOWIN_BSRAM_FORCE_SYNC_RESET=0. See Artefacts/RPi_FPGA/
+            # bsram-side-action-plan_2026-05-11_*.md.
+            _sync_env = os.environ.get('GOWIN_BSRAM_FORCE_SYNC_RESET', '1')
+            _force_sync = _sync_env.lower() not in ('0', 'false', 'no', 'off')
+            if val == 'ASYNC' and not _force_sync:
                 bsram_attrs[f'OUTREG_ASYNC'] = 'RESET'
         elif parm == 'WRITE_MODE0':
             val = int(val, 2)
