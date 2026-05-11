@@ -266,6 +266,9 @@ def parse_attrvals(tile, logicinfo_table, fuse_table, attrname_table, tableName)
             clean_av = get_positive(av)
             attrvals.update(clean_av) # set attributes
             for idx in clean_av:
+                if idx not in logicinfo_table:
+                    print(f'[GOWIN_UNPACK_DEBUG] missing logicinfo idx={idx} in table {tableName} (set-bits path)', file=__import__('sys').stderr)
+                    continue
                 attr, val = logicinfo_table[idx]
                 res[get_attr_name(attrname_table, attr, tableName)] = val
 
@@ -280,6 +283,9 @@ def parse_attrvals(tile, logicinfo_table, fuse_table, attrname_table, tableName)
                 keep = False
                 break
             for idx in av:
+                if abs(idx) not in logicinfo_table:
+                    print(f'[GOWIN_UNPACK_DEBUG] missing logicinfo idx={abs(idx)} in table {tableName} (neg-keys path)', file=__import__('sys').stderr)
+                    continue
                 attr, _ = logicinfo_table[abs(idx)]
                 if attr in res.keys():
                     keep = False
@@ -289,6 +295,9 @@ def parse_attrvals(tile, logicinfo_table, fuse_table, attrname_table, tableName)
             ignore_attrs.update(get_negative(av))
 
     for idx in neg_attrvals:
+        if idx not in logicinfo_table:
+            print(f'[GOWIN_UNPACK_DEBUG] missing logicinfo idx={idx} in table {tableName} (neg-attrvals path)', file=__import__('sys').stderr)
+            continue
         attr, val = logicinfo_table[idx]
         res[get_attr_name(attrname_table, attr, tableName)] = val
 
@@ -302,6 +311,9 @@ def parse_attrvals(tile, logicinfo_table, fuse_table, attrname_table, tableName)
                 break
         if keep:
             for idx in get_negative(av):
+                if idx not in logicinfo_table:
+                    print(f'[GOWIN_UNPACK_DEBUG] missing logicinfo idx={idx} in table {tableName} (unused-fuses path)', file=__import__('sys').stderr)
+                    continue
                 attr, val = logicinfo_table[idx]
                 res[get_attr_name(attrname_table, attr, tableName)] = val
     return res
