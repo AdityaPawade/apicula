@@ -1314,11 +1314,14 @@ def set_bsram_attrs(db, cell, typ, params):
                             elif typ != 'SDP':
                                 raise Exception(f"BIT_WIDTH_1 for BSRAM type {typ} isn't supported (narrow-be-fix)")
                 else:
-                    # 2026-05-12 (Codex thread 019e1b98): do NOT emit DBLWB for
-                    # widths in {32, 36}.  Symmetric reasoning with DBLWA above.
-                    # Gowin SDPB probes confirm 32-bit B-side read is encoded by
-                    # ABSENCE of any B-side data-width fuse.
-                    # bsram_attrs['DBLWB'] = _bsram_bit_widths[val]  # removed
+                    # 2026-05-12 (Codex thread 019e1d1e): RESTORED DBLWB=X36
+                    # emission for {32, 36}. The earlier removal (019e1b98) was
+                    # based on probe RE that failed to exercise multi-byte reads.
+                    # Hardware verification (probe_multi_oled_live md5 b668ba01)
+                    # showed BW=8,32 cells return byte 0 for all 4 byte lanes.
+                    # Fuse diff vs Gowin EDA at tile (9,30) shows Gowin DOES set
+                    # bit (12,29) which chipdb decodes as DBLWB=X36. Restoring.
+                    bsram_attrs['DBLWB'] = _bsram_bit_widths[val]
                     if val in {16, 18}:
                         if typ =='DP':
                             dpb_16_18_byte_enable(typ, cell, bsram_attrs)
