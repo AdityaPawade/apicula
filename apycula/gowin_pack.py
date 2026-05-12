@@ -1193,7 +1193,13 @@ _bsram_bit_widths = { 1: '1', 2: '2', 4: '4', 8: '9', 9: '9', 16: '16', 18: '16'
 def set_bsram_attrs(db, cell, typ, params):
     bsram_attrs = {}
     bsram_attrs['MODE'] = 'ENABLE'
-    bsram_attrs['GSR'] = 'DISABLE'
+    # 2026-05-12 (Codex thread 019e1b98): do NOT set GSR='DISABLE' here.
+    # RE'd from 8 Gowin EDA probe bitstreams (SDPB at widths 1/8 x 4/32 +
+    # SDPX9B at 9x36, both READ_MODE 0/1): Gowin NEVER emits the GSR fuse
+    # for any SDPB/SDPX9B configuration.  Setting GSR='DISABLE' here was
+    # creating an extra fuse not present in any Gowin reference bitstream,
+    # contributing to the wrong-physical-mode BSRAM behavior on GW5A-25A.
+    # bsram_attrs['GSR'] = 'DISABLE'  # removed
 
     attrs_upper(params)
 
@@ -1259,7 +1265,13 @@ def set_bsram_attrs(db, cell, typ, params):
                             else:
                                 raise Exception(f"BIT_WIDTH_0 for BSRAM type {typ} isn't supported (narrow-be-fix)")
                 else:
-                    bsram_attrs['DBLWA'] = _bsram_bit_widths[val]
+                    # 2026-05-12 (Codex thread 019e1b98): do NOT emit DBLWA for
+                    # widths in {32, 36}.  RE'd from Gowin SDPB(1,32) / SDPB(8,32)
+                    # / SDPX9B(9,36) probes: Gowin treats 32/36 read/write width
+                    # as the CHIP DEFAULT and emits NO data-width fuse for that
+                    # port.  Previously emitting DBLWA='X36' was creating an
+                    # extra fuse that put the cell into the wrong physical mode.
+                    # bsram_attrs['DBLWA'] = _bsram_bit_widths[val]  # removed
                     if val in {16, 18}:
                         if typ == 'SDP':
                             sdp_16_18_byte_enable(typ, cell, bsram_attrs)
@@ -1302,7 +1314,11 @@ def set_bsram_attrs(db, cell, typ, params):
                             elif typ != 'SDP':
                                 raise Exception(f"BIT_WIDTH_1 for BSRAM type {typ} isn't supported (narrow-be-fix)")
                 else:
-                    bsram_attrs['DBLWB'] = _bsram_bit_widths[val]
+                    # 2026-05-12 (Codex thread 019e1b98): do NOT emit DBLWB for
+                    # widths in {32, 36}.  Symmetric reasoning with DBLWA above.
+                    # Gowin SDPB probes confirm 32-bit B-side read is encoded by
+                    # ABSENCE of any B-side data-width fuse.
+                    # bsram_attrs['DBLWB'] = _bsram_bit_widths[val]  # removed
                     if val in {16, 18}:
                         if typ =='DP':
                             dpb_16_18_byte_enable(typ, cell, bsram_attrs)
@@ -1342,8 +1358,17 @@ def set_bsram_attrs(db, cell, typ, params):
         elif parm == 'READ_MODE':
             val = int(val, 2)
             if val == 1:
-                bsram_attrs[f'{typ}A_REGMODE'] = 'OUTREG'
-                bsram_attrs[f'{typ}B_REGMODE'] = 'OUTREG'
+                # 2026-05-12 (Codex thread 019e1b98): emit BOTH SP* and DP*
+                # REGMODE simultaneously, matching Gowin's probe pattern.  RE'd
+                # from SDPB(*, *) RM=1 probes: Gowin sets all four
+                # SPA_REGMODE / SPB_REGMODE / DPA_REGMODE / DPB_REGMODE to
+                # 'OUTREG' (= fuse value 12) regardless of cell type.  The
+                # previous typ-specific emission missed three of the four,
+                # leaving them at chip default and creating pipeline-stage
+                # asymmetry that contributed to wrong reads on the BSRAM.
+                for _t in ('SP', 'DP'):
+                    bsram_attrs[f'{_t}A_REGMODE'] = 'OUTREG'
+                    bsram_attrs[f'{_t}B_REGMODE'] = 'OUTREG'
         elif parm == 'RESET_MODE':
             # BRAM-MATCH-WORK 2026-05-11: GOWIN_BSRAM_FORCE_SYNC_RESET defaults to ON
             # (forces all BSRAM cells to RESET_MODE=SYNC, matching Gowin EDA's universal
