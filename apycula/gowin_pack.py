@@ -22,6 +22,18 @@ bsram_init_map = None
 gw5a_bsrams = []
 adc_iolocs = {} # pos: {}
 
+# 2026-05-15 R49 (Codex round 12 thread 019e2a21): master flag +
+# fine-grained sub-flags for BSRAM "match Gowin" consolidated patch.
+def _env_flag(name):
+    v = os.environ.get(name, "")
+    return bool(v) and v.lower() not in ("0", "false", "no", "off")
+
+def _max_bsram_gowin_match():
+    return _env_flag("APICULA_MAX_BSRAM_GOWIN_MATCH")
+
+def _bsram_fix(name):
+    return _max_bsram_gowin_match() or _env_flag(name)
+
 # Sometimes it is convenient to know where a port is connected to enable
 # special fuses for VCC/VSS cases.
 
@@ -199,6 +211,16 @@ def store_bsram_init_val(db, row, col, typ, parms, attrs, map_offset = 0):
                 ptr -= 1
                 bit_no = (bit_no + 1) % 18
 
+    # 2026-05-15 R46 (Codex thread 019e2851): yosys/nextpnr emit
+    # INIT_RAM_* values as 'x' (don't-care) for memories with no explicit
+    # init. The original code treats every non-'0' char as a set bit, so
+    # 'x' → programmed 1s in the .fs. For sector_buffer (which RTL leaves
+    # uninitialized), that means thousands of stray 1-bits in BSRAM init.
+    # Gate to canonicalize 'x' → '0' before fuse encoding.
+    #   APICULA_INIT_X_AS_ZERO=1 (default OFF for safety)
+    _init_x_as_zero = os.environ.get('APICULA_INIT_X_AS_ZERO', '')
+    _init_x_as_zero = _init_x_as_zero and _init_x_as_zero.lower() not in ('0', 'false', 'no', 'off')
+
     addr = -1
     for init_row in range(0x40):
         row_name = f'INIT_RAM_{init_row:02X}'
@@ -207,6 +229,8 @@ def store_bsram_init_val(db, row, col, typ, parms, attrs, map_offset = 0):
             addr += 0x100
             continue
         init_data = parms[row_name]
+        if _init_x_as_zero:
+            init_data = init_data.replace('x', '0').replace('X', '0')
         #print(init_data)
         for ptr_bit_inc in get_bits(init_data):
             addr = ptr_bit_inc[2](addr)
@@ -1190,7 +1214,7 @@ def dpb_16_18_byte_enable(typ, cell, bsram_attrs):
         bsram_attrs[f'{typ}B_BELB'] = 'DISABLE'
 
 _bsram_bit_widths = { 1: '1', 2: '2', 4: '4', 8: '9', 9: '9', 16: '16', 18: '16', 32: 'X36', 36: 'X36'}
-def set_bsram_attrs(db, cell, typ, params):
+def set_bsram_attrs(db, cell, typ, params, cellname=None):
     bsram_attrs = {}
     bsram_attrs['MODE'] = 'ENABLE'
     # 2026-05-12 (Codex thread 019e1b98): do NOT set GSR='DISABLE' here.
@@ -1212,6 +1236,24 @@ def set_bsram_attrs(db, cell, typ, params):
         bsram_attrs[f'{typ}A_BELB'] = 'DISABLE'
         bsram_attrs[f'{typ}B_BEHB'] = 'DISABLE'
         bsram_attrs[f'{typ}B_BELB'] = 'DISABLE'
+
+    # 2026-05-15 R52 (Codex round 20 thread 019e2afc): ROOT CAUSE.
+    # HW-verified apples-to-apples (identical self-contained OLED MRP RTL,
+    # Gowin EDA build works -> OLED "A5 F0 00 F0", OSS build inert -> "00")
+    # fuse-diffed to a SINGLE missing config bit: tile-local R12C8 =
+    # BSRAM_SDP.CEMUX_CEA=INV. Gowin sets it on SDP just like it does for
+    # ROM (see block above); apicula only did it for ROM. Without the CE_A
+    # mux inversion the write-port clock-enable polarity is wrong, the
+    # BSRAM never captures writes, and every read returns 0 -- which is
+    # exactly the 20-round bug.
+    # 2026-05-15: now DEFAULT-ON (the proven fix). Original upstream behavior
+    # (no SDP CE_A inversion) is retained and selectable by explicitly
+    # exporting GOWIN_FORCE_BSRAM_SDP_CEA_INV=0 (or false/no/off).
+    if typ == 'SDP':
+        _cea_inv = os.environ.get('GOWIN_FORCE_BSRAM_SDP_CEA_INV', '1')
+        if _cea_inv.lower() not in ('0', 'false', 'no', 'off'):
+            bsram_attrs['CEMUX_CEA'] = 'INV'
+            print(f"R52 BSRAM SDP CEMUX_CEA=INV applied (cell typ={typ}) [default-on fix]")
 
     for parm, val in params.items():
         if parm == 'BIT_WIDTH':
@@ -1297,7 +1339,18 @@ def set_bsram_attrs(db, cell, typ, params):
             val = int(val, 2)
             if val in _bsram_bit_widths:
                 if val not in {32, 36}:
-                    bsram_attrs[f'{typ}B_DATA_WIDTH'] = _bsram_bit_widths[val]
+                    # R49 (Codex round 12): Gowin does NOT set SDPB_DATA_WIDTH=9
+                    # for our 8/9-bit SDP byte-write/word-read case; OSS does
+                    # (creates spurious fuse (12,14)). Suppress under master
+                    # flag or APICULA_BSRAM_SUPPRESS_SDPB_WIDTH9=1.
+                    _suppress_sdpb_width = (device in {'GW5A-25A', 'GW5AST-138C'}
+                                             and typ == 'SDP'
+                                             and val in {8, 9}
+                                             and _bsram_fix('APICULA_BSRAM_SUPPRESS_SDPB_WIDTH9'))
+                    if not _suppress_sdpb_width:
+                        bsram_attrs[f'{typ}B_DATA_WIDTH'] = _bsram_bit_widths[val]
+                    else:
+                        print(f"R49 suppress SDPB_DATA_WIDTH=9 for {typ} cell")
                     # Codex round 17 fix (mirror of BIT_WIDTH_0 fix above):
                     # emit narrow-DP byte-enable attributes for B-side.
                     _narrow_be_env = os.environ.get('GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX', '')
@@ -1403,6 +1456,33 @@ def set_bsram_attrs(db, cell, typ, params):
             elif val == 2:
                 bsram_attrs[f'{typ}A_MODE'] = 'RBW'
                 bsram_attrs[f'{typ}B_MODE'] = 'RBW'
+    # 2026-05-15 R47 (Codex thread 019e286b): Gowin's working byte-0 SDPB
+    # (R9C23) decodes with REGSET_RSTB=INV. OSS bitstream omits this attribute,
+    # which may keep the BSRAM read-port output register held in reset state,
+    # making it return 0x00 regardless of write activity. Env-gated emit:
+    #   APICULA_EMIT_REGSET_RSTB=1 -> add REGSET_RSTB=INV for SDP cells whose
+    #   cellname contains 'sector_buffer'.
+    _emit_regset_rstb = os.environ.get('APICULA_EMIT_REGSET_RSTB', '')
+    _emit_regset_rstb = _emit_regset_rstb and _emit_regset_rstb.lower() not in ('0', 'false', 'no', 'off')
+    if (_emit_regset_rstb
+            and typ == 'SDP'
+            and cellname is not None
+            and 'sector_buffer' in cellname):
+        bsram_attrs['REGSET_RSTB'] = 'INV'
+        print(f"R47 BSRAM REGSET_RSTB=INV for SDP cell {cellname}")
+
+    # R49 (Codex round 12): also try REGSET_WEB=UNKNOWN (same attribute family
+    # shares config-area at (12,35)). Gate via APICULA_BSRAM_FORCE_REGSET_WEB
+    # or master flag.
+    if (typ == 'SDP'
+            and device in {'GW5A-25A', 'GW5AST-138C'}
+            and _bsram_fix('APICULA_BSRAM_FORCE_REGSET_WEB')):
+        try:
+            bsram_attrs['REGSET_WEB'] = 'UNKNOWN'
+            print(f"R49 REGSET_WEB=UNKNOWN for SDP cell {cellname}")
+        except Exception as _e:
+            print(f"R49 REGSET_WEB attr emit failed: {_e}")
+
     fin_attrs = set()
     #print(bsram_attrs)
     for attr, val in bsram_attrs.items():
@@ -3817,7 +3897,7 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                 bisect.insort(gw5a_bsrams, (col - 1, row - 1, typ, parms, attrs))
             else:
                 store_bsram_init_val(db, row - 1, col -1, typ, parms, attrs)
-            bsram_attrs = set_bsram_attrs(db, cell, typ, parms)
+            bsram_attrs = set_bsram_attrs(db, cell, typ, parms, cellname=(cellname if not is_aux else None))
             try:
                 bsrambits = get_shortval_fuses(db, tiledata.ttyp, bsram_attrs, f'BSRAM_{typ}')
                 #print(f'({row - 1}, {col - 1}) attrs:{bsram_attrs}, bits:{bsrambits}')
@@ -3825,6 +3905,37 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                     tile[brow][bcol] = 1
             except KeyError:
                 assert device == 'GW5AST-138C' and is_aux # some aux tiles have no relevant config bits
+            # R49 (Codex round 12 thread 019e2a21): force-emit pip fuses that
+            # Gowin's reference bitstream programs for byte-0 SDPB (R9C23) but
+            # OSS's nextpnr doesn't route. Gates: APICULA_MAX_BSRAM_GOWIN_MATCH=1.
+            # This is intentionally aggressive (mirrors Gowin's full control-plane
+            # wiring for sector_buffer SDPBs). Only fires for cells whose
+            # cellname contains 'sector_buffer' to avoid corrupting other BSRAMs.
+            if (not is_aux
+                    and device in {'GW5A-25A', 'GW5AST-138C'}
+                    and typ == 'SDP'
+                    and cellname is not None
+                    and 'sector_buffer' in cellname
+                    and _max_bsram_gowin_match()):
+                _gowin_force_pips = [
+                    ('X07', 'CE1'),    # R45 selector
+                    ('W242', 'X07'),   # R48 upstream pullup
+                    ('GB00', 'CLK0'),  # clock
+                    ('LB11', 'LSR0'),  # reset routing (Gowin's choice)
+                    ('X05',  'LSR1'),
+                    ('X06',  'LSR2'),
+                    ('W212', 'CE0'),   # write CE
+                    ('X06',  'CE2'),
+                ]
+                for _src, _dest in _gowin_force_pips:
+                    try:
+                        _pip_bits = tiledata.pips.get(_dest, {}).get(_src)
+                        if _pip_bits:
+                            for _br, _bc in _pip_bits:
+                                tile[_br][_bc] = 1
+                            print(f"R49 force-pip {_src}->{_dest} at ({row-1},{col-1}) bits {sorted(_pip_bits)}")
+                    except Exception as _e:
+                        print(f"R49 force-pip {_src}->{_dest} skipped: {_e}")
         elif typ in {'MULTADDALU18X18', 'MULTALU36X18', 'MULTALU18X18', 'MULT36X36', 'MULT18X18', 'MULT9X9', 'PADD18', 'PADD9', 'ALU54D', 'MULT12X12', 'MULTALU27X18', 'MULTADDALU12X12'} or typ == 'DSP_AUX':
             if typ == 'DSP_AUX':
                 typ = cell['type']
@@ -4379,6 +4490,33 @@ def route(db, tilemap, pips):
                         for brow, bcol in bits:
                             tile[brow][bcol] = 1
 
+    def force_5a_spine_enable(dest):
+        # R43 (Codex thread 2026-05-14): GW5A-25A hardware bring-up data shows
+        # designs are only alive when both SPINE16 and SPINE24 enable fuses are
+        # programmed. These fuses are independent of the routed clock pips, so
+        # force them even when nextpnr does not route through the spine.
+        # Pattern: alive R32/R36 have SPINE0+SPINE16+SPINE24. Dead R34/R35/R41
+        # variants drop SPINE16 or SPINE24 → no clock distribution to chip's
+        # essential regions → blank OLED, no signs of life.
+        #
+        # NOTE: do NOT check used_spines — the upstream code adds to used_spines
+        # BEFORE verifying that any tile actually has the enable table in its
+        # shortval. So used_spines can claim a spine is "enabled" when no fuses
+        # were actually programmed.
+        spine_enable_table = f'5A_PCLK_ENABLE_{wnames.clknumbers[dest]:02}'
+        fuses_set = 0
+        for row in range(db.rows):
+            for col in range(db.cols):
+                ttyp = db.grid[row][col]
+                if spine_enable_table in db.shortval[ttyp] and (1, 0) in db.shortval[ttyp][spine_enable_table]:
+                    tile = tilemap[(row, col)]
+                    for brow, bcol in db.shortval[ttyp][spine_enable_table][(1, 0)]:
+                        tile[brow][bcol] = 1
+                    print(f"Force enable spine {dest} by {spine_enable_table} at ({row}, {col})")
+                    fuses_set += 1
+        if fuses_set == 0:
+            print(f"WARNING: force_5a_spine_enable({dest}) — table {spine_enable_table} not found in any tile's shortval (no fuses programmed)")
+
     def set_5a_hclk_wire_fuses(src, dest):
         fuse_set = False
         for row in range(db.rows):
@@ -4409,6 +4547,57 @@ def route(db, tilemap, pips):
                 continue
             else:
                 bits = tiledata.pips[dest][src]
+                # 2026-05-15 R45 (Codex thread 019e282b/c/d): GW5A-25A BSRAM
+                # SDPB tiles need the CE1 read-port fuse programmed when CEB
+                # is tied high. nextpnr routes VCC -> CE1, but VCC -> CE1 has
+                # empty fuse set in chipdb. Source-of-truth (Gowin) uses
+                # LB31 -> CE1 with fuses [(0,0),(0,2)] for the byte-0 SDPB
+                # (R9C23 in Gowin ref). N212 -> CE1 with fuses [(0,0),(1,7)]
+                # is also a valid encoding present in ttyp=40, but N212 may
+                # be a routing wire of uncertain default state.
+                #
+                # Runtime gate: APICULA_EMIT_SDPB_CE1 controls activation:
+                #   unset/0/false/off   -> patch inactive (upstream behavior)
+                #   1 or "n212"         -> N212 -> CE1 fuses
+                #   "lb31"              -> LB31 -> CE1 fuses (LB31 subset)
+                #   "x07"               -> X07 -> CE1 fuses [(0,0),(0,2),(1,1),(1,2)]
+                #                          which is the ACTUAL pattern in Gowin's
+                #                          working byte-0 SDPB (R9C23). Round 8
+                #                          (Codex thread 019e285c) confirmed
+                #                          Gowin sets all 4 bits, not just LB31's 2.
+                _emit_sdpb_ce1 = os.environ.get('APICULA_EMIT_SDPB_CE1', '')
+                _emit_mode = _emit_sdpb_ce1.lower() if _emit_sdpb_ce1 else ''
+                _emit_active = _emit_mode and _emit_mode not in ('0', 'false', 'no', 'off')
+                if (_emit_active
+                        and device in {'GW5A-25A', 'GW5AST-138C'}
+                        and src == 'VCC' and dest == 'CE1'):
+                    _ttyp = db.grid[row-1][col-1]
+                    if 'BSRAM_SDP' in db.shortval.get(_ttyp, {}):
+                        _ce1_pips = tiledata.pips.get('CE1', {})
+                        if _emit_mode == 'x07' and 'X07' in _ce1_pips:
+                            bits = set(bits) | _ce1_pips['X07']
+                            print(f"R45 SDPB CE1 emit: VCC->CE1 at ({row-1},{col-1}) -> X07 fuses {sorted(_ce1_pips['X07'])}")
+                            # 2026-05-15 R48 (Codex round 11 thread 019e29af):
+                            # Gowin's working byte-0 SDPB (R9C23) programs the
+                            # UPSTREAM driver `W242 -> X07` with fuses
+                            # `(2,41),(3,39),(3,40),(3,42)` IN ADDITION to the
+                            # X07 -> CE1 selector. Without W242 -> X07, X07 is
+                            # floating and our X07 -> CE1 selector achieves
+                            # nothing on silicon (HW verdict 2026-05-15 03:18).
+                            # Env-gated: APICULA_BSRAM_X07_W242_PULLUP=1.
+                            _emit_w242 = os.environ.get('APICULA_BSRAM_X07_W242_PULLUP', '')
+                            _emit_w242 = _emit_w242 and _emit_w242.lower() not in ('0', 'false', 'no', 'off')
+                            if _emit_w242:
+                                _x07_drivers = tiledata.pips.get('X07', {})
+                                if 'W242' in _x07_drivers:
+                                    bits |= _x07_drivers['W242']
+                                    print(f"R48 BSRAM X07<-W242 pullup at ({row-1},{col-1}) -> fuses {sorted(_x07_drivers['W242'])}")
+                        elif _emit_mode == 'lb31' and 'LB31' in _ce1_pips:
+                            bits = set(bits) | _ce1_pips['LB31']
+                            print(f"R45 SDPB CE1 emit: VCC->CE1 at ({row-1},{col-1}) -> LB31 fuses {sorted(_ce1_pips['LB31'])}")
+                        elif 'N212' in _ce1_pips:
+                            bits = set(bits) | _ce1_pips['N212']
+                            print(f"R45 SDPB CE1 emit: VCC->CE1 at ({row-1},{col-1}) -> N212 fuses {sorted(_ce1_pips['N212'])}")
                 # check if we have 'not conencted to' situation
                 if dest in tiledata.alonenode:
                     for srcs_fuses in tiledata.alonenode[dest]:
@@ -4421,6 +4610,8 @@ def route(db, tilemap, pips):
             continue
         for row, col in bits:
             tile[row][col] = 1
+
+    # R43: force-enable was a no-op (wrote fuses already set elsewhere). Removed.
 
 def header_footer(db, bs, compress):
     """
