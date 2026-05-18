@@ -3214,6 +3214,46 @@ def iologic_mod_attrs(attrs):
     attrs.pop('LSREN', None)
     attrs.pop('Q0_INIT', None)
     attrs.pop('Q1_INIT', None)
+    attrs.pop('INIT', None)
+
+_ff_regset_attrs = {
+        'DFFS': 'SET', 'DFFSE': 'SET', 'DFFP': 'SET', 'DFFPE': 'SET',
+        'DFFNS': 'SET', 'DFFNSE': 'SET', 'DFFNP': 'SET', 'DFFNPE': 'SET',
+        }
+
+def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
+    in_attrs.pop('INIT', None)
+    in_attrs.pop('HAS_REG', None)
+    in_attrs.pop('IREG_TYPE', None)
+    in_attrs.pop('OREG_TYPE', None)
+    if 'HAS_REG' not in param:
+        return
+    # GW5A encodes LSROMUX_0=0 as a negative shortval key. Leaving the
+    # default attr present suppresses that fuse and decodes as a spurious
+    # LSROMUX_0=0 on registered EMPTY IOLOGIC cells.
+    in_attrs.pop('LSROMUX_0', None)
+    iologic_type = param['IOLOGIC_TYPE']
+    if iologic_type == 'IOLOGICI_EMPTY':
+        reg_type = param.get('IREG_TYPE', 'DFF')
+        in_attrs['IREG_INREGMODE'] = 'FF'
+        if reg_type in _ff_regset_attrs:
+            in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
+    elif iologic_type == 'IOLOGICO_EMPTY':
+        reg_type = param.get('OREG_TYPE', 'DFF')
+        in_attrs['OUTMODE'] = 'OREG'
+        in_attrs['CLKOMUX'] = 'ENABLE'
+        in_attrs['CEOMUX_1'] = '1'
+        in_attrs['LSRMUX_LSR'] = 'INV'
+        in_attrs['OREG_OUTREGMODE'] = 'FF'
+        if reg_type in _ff_regset_attrs:
+            in_attrs['OREG_REGSET'] = _ff_regset_attrs[reg_type]
+    if os.environ.get('APICULA_IOREG_DEBUG'):
+        print('APICULA_IOREG_DEBUG',
+              f'cellname={cellname}',
+              f'param_keys={sorted(param.keys())}',
+              f'HAS_REG={param.get("HAS_REG")}',
+              f'IOLOGIC_TYPE={iologic_type}',
+              f'in_attrs={dict(sorted(in_attrs.items()))}')
 
 def make_iodelay_attrs(in_attrs, param):
     if 'IODELAY' not in param:
@@ -3296,7 +3336,7 @@ def set_iologic_fclk(in_attrs, attrs, param, out = True):
                 in_attrs['FCLKSEL7'] = 'HCLK3_'
                 in_attrs['FCLKSEL4'] = 'HCLK3'
 
-def set_iologic_attrs(db, attrs, param):
+def set_iologic_attrs(db, attrs, param, cellname=None):
     def set_pre5a_out_attrs():
         if attrs['OUTMODE'] != 'ODDRX1' or param['IOLOGIC_TYPE'] == 'ODDRC':
             in_attrs['LSROMUX_0'] = '1'
@@ -3408,6 +3448,9 @@ def set_iologic_attrs(db, attrs, param):
 
     if device not in {'GW5A-25A'}:
         make_iodelay_attrs(in_attrs, param);
+
+    if device in {'GW5A-25A'}:
+        set_empty_ioreg_attrs(in_attrs, param, cellname)
 
     for k, val in in_attrs.items():
         if k not in attrids.iologic_attrids:
@@ -3875,7 +3918,7 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
             #bank = chipdb.loc2bank(db, row - 1, col - 1)
             #_banks.setdefault.add(bank, BankDesc(None, set())).bels.add(rc2tbrl(db, row - 1, col - 1, num))
 
-            iologic_attrs = set_iologic_attrs(db, parms, attrs)
+            iologic_attrs = set_iologic_attrs(db, parms, attrs, cellname)
             bits = set()
             table_type = f'IOLOGIC{num}'
             fuse_ttyp = tiledata.ttyp
