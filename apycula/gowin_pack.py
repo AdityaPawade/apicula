@@ -211,15 +211,10 @@ def store_bsram_init_val(db, row, col, typ, parms, attrs, map_offset = 0):
                 ptr -= 1
                 bit_no = (bit_no + 1) % 18
 
-    # 2026-05-15 R46 (Codex thread 019e2851): yosys/nextpnr emit
-    # INIT_RAM_* values as 'x' (don't-care) for memories with no explicit
-    # init. The original code treats every non-'0' char as a set bit, so
-    # 'x' → programmed 1s in the .fs. For sector_buffer (which RTL leaves
-    # uninitialized), that means thousands of stray 1-bits in BSRAM init.
-    # Gate to canonicalize 'x' → '0' before fuse encoding.
-    #   APICULA_INIT_X_AS_ZERO=1 (default OFF for safety)
-    _init_x_as_zero = os.environ.get('APICULA_INIT_X_AS_ZERO', '')
-    _init_x_as_zero = _init_x_as_zero and _init_x_as_zero.lower() not in ('0', 'false', 'no', 'off')
+    # APICULA_INIT_X_AS_ZERO experiment probe removed (2026-05-19 cleanup;
+    # was default-OFF, unused by any shipping build). Upstream/default
+    # behavior unchanged: 'x' init chars treated as set bits.
+    _init_x_as_zero = False
 
     addr = -1
     for init_row in range(0x40):
@@ -1289,8 +1284,7 @@ def set_bsram_attrs(db, cell, typ, params, cellname=None):
                     # writes silently failed. Gate behind env var
                     # GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX=1 (off by default,
                     # backward-compatible).
-                    _narrow_be_env = os.environ.get('GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX', '')
-                    _narrow_be_enabled = _narrow_be_env and _narrow_be_env.lower() not in ('0', 'false', 'no', 'off')
+                    _narrow_be_enabled = False  # GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX experiment removed (2026-05-19 cleanup; was default-OFF, unused)
                     if _narrow_be_enabled:
                         if val in {16, 18}:
                             if typ == 'SDP':
@@ -1353,8 +1347,7 @@ def set_bsram_attrs(db, cell, typ, params, cellname=None):
                         print(f"R49 suppress SDPB_DATA_WIDTH=9 for {typ} cell")
                     # Codex round 17 fix (mirror of BIT_WIDTH_0 fix above):
                     # emit narrow-DP byte-enable attributes for B-side.
-                    _narrow_be_env = os.environ.get('GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX', '')
-                    _narrow_be_enabled = _narrow_be_env and _narrow_be_env.lower() not in ('0', 'false', 'no', 'off')
+                    _narrow_be_enabled = False  # GOWIN_BSRAM_NARROW_BYTE_ENABLE_FIX experiment removed (2026-05-19 cleanup; was default-OFF, unused)
                     if _narrow_be_enabled:
                         if val in {16, 18}:
                             if typ == 'DP':
@@ -1462,8 +1455,7 @@ def set_bsram_attrs(db, cell, typ, params, cellname=None):
     # making it return 0x00 regardless of write activity. Env-gated emit:
     #   APICULA_EMIT_REGSET_RSTB=1 -> add REGSET_RSTB=INV for SDP cells whose
     #   cellname contains 'sector_buffer'.
-    _emit_regset_rstb = os.environ.get('APICULA_EMIT_REGSET_RSTB', '')
-    _emit_regset_rstb = _emit_regset_rstb and _emit_regset_rstb.lower() not in ('0', 'false', 'no', 'off')
+    _emit_regset_rstb = False  # APICULA_EMIT_REGSET_RSTB experiment removed (2026-05-19 cleanup; was default-OFF, unused)
     if (_emit_regset_rstb
             and typ == 'SDP'
             and cellname is not None
@@ -3247,13 +3239,7 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         in_attrs['OREG_OUTREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['OREG_REGSET'] = _ff_regset_attrs[reg_type]
-    if os.environ.get('APICULA_IOREG_DEBUG'):
-        print('APICULA_IOREG_DEBUG',
-              f'cellname={cellname}',
-              f'param_keys={sorted(param.keys())}',
-              f'HAS_REG={param.get("HAS_REG")}',
-              f'IOLOGIC_TYPE={iologic_type}',
-              f'in_attrs={dict(sorted(in_attrs.items()))}')
+    # APICULA_IOREG_DEBUG diagnostic print removed (2026-05-19 cleanup; default-OFF, unused).
 
 def make_iodelay_attrs(in_attrs, param):
     if 'IODELAY' not in param:
@@ -4608,9 +4594,10 @@ def route(db, tilemap, pips):
                 #                          working byte-0 SDPB (R9C23). Round 8
                 #                          (Codex thread 019e285c) confirmed
                 #                          Gowin sets all 4 bits, not just LB31's 2.
-                _emit_sdpb_ce1 = os.environ.get('APICULA_EMIT_SDPB_CE1', '')
-                _emit_mode = _emit_sdpb_ce1.lower() if _emit_sdpb_ce1 else ''
-                _emit_active = _emit_mode and _emit_mode not in ('0', 'false', 'no', 'off')
+                # APICULA_EMIT_SDPB_CE1 experiment removed (2026-05-19 cleanup;
+                # was default-OFF / upstream behavior, unused by any shipping build).
+                _emit_mode = ''
+                _emit_active = False
                 if (_emit_active
                         and device in {'GW5A-25A', 'GW5AST-138C'}
                         and src == 'VCC' and dest == 'CE1'):
@@ -4628,8 +4615,7 @@ def route(db, tilemap, pips):
                             # floating and our X07 -> CE1 selector achieves
                             # nothing on silicon (HW verdict 2026-05-15 03:18).
                             # Env-gated: APICULA_BSRAM_X07_W242_PULLUP=1.
-                            _emit_w242 = os.environ.get('APICULA_BSRAM_X07_W242_PULLUP', '')
-                            _emit_w242 = _emit_w242 and _emit_w242.lower() not in ('0', 'false', 'no', 'off')
+                            _emit_w242 = False  # APICULA_BSRAM_X07_W242_PULLUP experiment removed (2026-05-19 cleanup; default-OFF, unused)
                             if _emit_w242:
                                 _x07_drivers = tiledata.pips.get('X07', {})
                                 if 'W242' in _x07_drivers:
