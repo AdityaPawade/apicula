@@ -14,16 +14,52 @@
   },
   "totals": {
     "target_delta_unknown": 141,
-    "visible_in_corpus": 32,
-    "overlay_entries": 14,
-    "remaining_invisible": 109
+    "visible_in_corpus": 65,
+    "overlay_entries": 35,
+    "remaining_invisible": 76
   },
   "status": "EXTRACTED-BUT-DORMANT (no current trigger emits IOLOGICO_EMPTY+HAS_REG cells; reverted 2026-05-21 after 3 HW failures)",
   "invisible_bit_explanation": "109 target_delta_16dq bits are NOT visible in our minimal Gowin micro-corpus. They are likely activated only in EXP_HH-context: SDRAM-DQ multi-bit-bus + specific clock spine + bidirectional registered output + PLL clock domain. Surfacing them would require corpus designs that replicate that context (multi-bit IOBUF arrays clocked from a PLL with explicit synchronous read+write timing). Currently parked.",
   "overlays": [
     {
-      "id": "ttyp245_sig22868",
-      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['G2', 'J4', 'L2', 'L4'])",
+      "id": "ttyp245_sig9226",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          9,
+          63
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          63
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig13862",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['G2', 'J4', 'L2', 'L4', 'MULTI'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -34,9 +70,18 @@
         "G2",
         "J4",
         "L2",
-        "L4"
+        "L4",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -77,18 +122,99 @@
       "confidence": "HIGH"
     },
     {
-      "id": "ttyp245_sig61074",
-      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff_oeff'] (evidence pins: ['L4'])",
+      "id": "ttyp245_sig70692",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
-        "has_attr": "TREG_OUTREGMODE",
-        "attr_value": "FF"
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
       },
       "evidence_pins": [
-        "L4"
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          9,
+          68
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          68
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig33440",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          1,
+          109
+        ],
+        [
+          1,
+          110
+        ]
+      ],
+      "in_target_delta": [
+        [
+          1,
+          109
+        ],
+        [
+          1,
+          110
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig76943",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_oeff', 'iobuf_dff_oeff'] (evidence pins: ['L4', 'MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "L4",
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_oeff",
         "iobuf_dff_oeff"
       ],
       "bits": [
@@ -103,11 +229,215 @@
           45
         ]
       ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp245_sig80552",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          1,
+          111
+        ],
+        [
+          1,
+          114
+        ],
+        [
+          5,
+          74
+        ],
+        [
+          5,
+          75
+        ],
+        [
+          5,
+          76
+        ],
+        [
+          5,
+          77
+        ]
+      ],
+      "in_target_delta": [
+        [
+          1,
+          111
+        ],
+        [
+          1,
+          114
+        ],
+        [
+          5,
+          74
+        ],
+        [
+          5,
+          75
+        ],
+        [
+          5,
+          76
+        ],
+        [
+          5,
+          77
+        ]
+      ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp245_sig54523",
-      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['J4', 'L2', 'L4'])",
+      "id": "ttyp245_sig99160",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_direct', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          9,
+          70
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          70
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig385",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffs', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          4,
+          50
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          50
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig62305",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffs', 'iobuf_16bit_dualclk'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_dualclk"
+      ],
+      "bits": [
+        [
+          4,
+          96
+        ],
+        [
+          5,
+          101
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          96
+        ],
+        [
+          5,
+          101
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig31405",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk"
+      ],
+      "bits": [
+        [
+          0,
+          4
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          4
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig20611",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk', 'iobuf_dffce', 'obuf_dffce'] (evidence pins: ['J4', 'L2', 'L4', 'MULTI'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -117,9 +447,12 @@
       "evidence_pins": [
         "J4",
         "L2",
-        "L4"
+        "L4",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk",
         "iobuf_dffce",
         "obuf_dffce"
       ],
@@ -127,10 +460,6 @@
         [
           0,
           1
-        ],
-        [
-          0,
-          5
         ],
         [
           1,
@@ -147,10 +476,6 @@
           1
         ],
         [
-          0,
-          5
-        ],
-        [
           1,
           0
         ],
@@ -159,22 +484,25 @@
           8
         ]
       ],
-      "confidence": "MEDIUM (single-pin evidence)"
+      "confidence": "HIGH"
     },
     {
-      "id": "ttyp245_sig95162",
-      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['obuf_dffce'] (evidence pins: ['J4', 'L2'])",
+      "id": "ttyp245_sig93613",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk', 'obuf_dffce'] (evidence pins: ['J4', 'L2', 'MULTI'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
-        "has_attr": "CEOMUX_1",
-        "attr_value": "1"
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
       },
       "evidence_pins": [
         "J4",
-        "L2"
+        "L2",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk",
         "obuf_dffce"
       ],
       "bits": [
@@ -192,8 +520,61 @@
       "confidence": "HIGH"
     },
     {
-      "id": "ttyp245_sig7895",
-      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['obuf_dffr', 'obuf_dffs'] (evidence pins: ['J4'])",
+      "id": "ttyp245_sig1134",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffpe'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffpe"
+      ],
+      "bits": [
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          7,
+          14
+        ],
+        [
+          7,
+          20
+        ]
+      ],
+      "in_target_delta": [
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          7,
+          14
+        ],
+        [
+          7,
+          20
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig97929",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'obuf_dffr', 'obuf_dffs'] (evidence pins: ['J4', 'MULTI'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -201,9 +582,13 @@
         "attr_value": "_any_"
       },
       "evidence_pins": [
-        "J4"
+        "J4",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
         "obuf_dffr",
         "obuf_dffs"
       ],
@@ -219,11 +604,106 @@
           6
         ]
       ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp245_sig40616",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffr'] (evidence pins: ['MULTI'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffr"
+      ],
+      "bits": [
+        [
+          2,
+          40
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          40
+        ]
+      ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp247_sig22868",
-      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['A1', 'B2'])",
+      "id": "ttyp245_sig67992",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['L4'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "L4"
+      ],
+      "evidence_signature": [
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          5
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          5
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig9226",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          9,
+          63
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          63
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig13862",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['A1', 'B2', 'MULTI'])",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -232,9 +712,18 @@
       },
       "evidence_pins": [
         "A1",
-        "B2"
+        "B2",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -275,8 +764,8 @@
       "confidence": "HIGH"
     },
     {
-      "id": "ttyp247_sig18798",
-      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'tbuf_dff'] (evidence pins: ['B2'])",
+      "id": "ttyp247_sig33440",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -284,9 +773,149 @@
         "attr_value": "OREG"
       },
       "evidence_pins": [
-        "B2"
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          4,
+          50
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          50
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig80552",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          5,
+          48
+        ]
+      ],
+      "in_target_delta": [
+        [
+          5,
+          48
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig14328",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dualclk'] (evidence pins: ['MULTI'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dualclk"
+      ],
+      "bits": [
+        [
+          9,
+          68
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          68
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig20611",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk', 'iobuf_dffce', 'obuf_dffce'] (evidence pins: ['A1', 'B2', 'MULTI'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "A1",
+        "B2",
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk",
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp247_sig37021",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffs', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'tbuf_dff'] (evidence pins: ['B2', 'MULTI'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "B2",
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -304,10 +933,10 @@
           51
         ]
       ],
-      "confidence": "MEDIUM (single-pin evidence)"
+      "confidence": "HIGH"
     },
     {
-      "id": "ttyp247_sig54523",
+      "id": "ttyp247_sig67992",
       "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['A1', 'B2'])",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
@@ -326,44 +955,28 @@
       "bits": [
         [
           0,
-          1
-        ],
-        [
-          0,
           4
         ],
         [
           0,
           7
-        ],
-        [
-          1,
-          0
         ]
       ],
       "in_target_delta": [
         [
           0,
-          1
-        ],
-        [
-          0,
           4
         ],
         [
           0,
           7
-        ],
-        [
-          1,
-          0
         ]
       ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp396_sig53566",
-      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'obuf_direct', 'tbuf_dff'] (evidence pins: ['F2'])",
+      "id": "ttyp396_sig56681",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'obuf_direct', 'tbuf_dff'] (evidence pins: ['F2', 'MULTI'])",
       "ttyp": 396,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -371,9 +984,18 @@
         "attr_value": "OREG"
       },
       "evidence_pins": [
-        "F2"
+        "F2",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -396,11 +1018,11 @@
           63
         ]
       ],
-      "confidence": "MEDIUM (single-pin evidence)"
+      "confidence": "HIGH"
     },
     {
-      "id": "ttyp396_sig22868",
-      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['F2'])",
+      "id": "ttyp396_sig13862",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['F2', 'MULTI'])",
       "ttyp": 396,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -408,9 +1030,18 @@
         "attr_value": "OREG"
       },
       "evidence_pins": [
-        "F2"
+        "F2",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -448,11 +1079,75 @@
           84
         ]
       ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp396_sig59567",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          9,
+          68
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          68
+        ]
+      ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp396_sig54523",
-      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['F2'])",
+      "id": "ttyp396_sig80552",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_direct'] (evidence pins: ['MULTI'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_direct"
+      ],
+      "bits": [
+        [
+          4,
+          50
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          50
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp396_sig20611",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk', 'iobuf_dffce', 'obuf_dffce'] (evidence pins: ['F2', 'MULTI'])",
       "ttyp": 396,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -460,9 +1155,12 @@
         "attr_value": "1"
       },
       "evidence_pins": [
-        "F2"
+        "F2",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk",
         "iobuf_dffce",
         "obuf_dffce"
       ],
@@ -486,10 +1184,63 @@
           0
         ]
       ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp396_sig70993",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          4,
+          51
+        ],
+        [
+          4,
+          56
+        ],
+        [
+          5,
+          53
+        ],
+        [
+          5,
+          54
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          51
+        ],
+        [
+          4,
+          56
+        ],
+        [
+          5,
+          53
+        ],
+        [
+          5,
+          54
+        ]
+      ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp396_sig7895",
+      "id": "ttyp396_sig59288",
       "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['obuf_dffr', 'obuf_dffs'] (evidence pins: ['F2'])",
       "ttyp": 396,
       "bel_pattern": "IOLOGIC[AB]",
@@ -519,8 +1270,8 @@
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp401_sig22868",
-      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['K1'])",
+      "id": "ttyp401_sig9226",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
       "ttyp": 401,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -528,9 +1279,54 @@
         "attr_value": "OREG"
       },
       "evidence_pins": [
-        "K1"
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          6,
+          56
+        ]
+      ],
+      "in_target_delta": [
+        [
+          6,
+          56
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp401_sig13862",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffce', 'iobuf_16bit_dffpe', 'iobuf_16bit_dffr', 'iobuf_16bit_dffs', 'iobuf_16bit_direct', 'iobuf_16bit_dualclk', 'iobuf_16bit_oeff', 'iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['K1', 'MULTI'])",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "K1",
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dffpe",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_dffs",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_dualclk",
+        "iobuf_16bit_oeff",
         "iobuf_dff",
         "iobuf_dff_oeff",
         "iobuf_dffce",
@@ -568,11 +1364,51 @@
           84
         ]
       ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp401_sig99160",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_bus_internal_counter', 'iobuf_16bit_dffr', 'iobuf_16bit_direct', 'iobuf_16bit_oeff'] (evidence pins: ['MULTI'])",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "MULTI"
+      ],
+      "evidence_signature": [
+        "iobuf_16bit_bus_internal_counter",
+        "iobuf_16bit_dffr",
+        "iobuf_16bit_direct",
+        "iobuf_16bit_oeff"
+      ],
+      "bits": [
+        [
+          6,
+          106
+        ],
+        [
+          6,
+          107
+        ]
+      ],
+      "in_target_delta": [
+        [
+          6,
+          106
+        ],
+        [
+          6,
+          107
+        ]
+      ],
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp401_sig54523",
-      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['K1'])",
+      "id": "ttyp401_sig20611",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_16bit_dffce', 'iobuf_16bit_dualclk', 'iobuf_dffce', 'obuf_dffce'] (evidence pins: ['K1', 'MULTI'])",
       "ttyp": 401,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {
@@ -580,9 +1416,12 @@
         "attr_value": "1"
       },
       "evidence_pins": [
-        "K1"
+        "K1",
+        "MULTI"
       ],
       "evidence_signature": [
+        "iobuf_16bit_dffce",
+        "iobuf_16bit_dualclk",
         "iobuf_dffce",
         "obuf_dffce"
       ],
@@ -622,7 +1461,7 @@
           0
         ]
       ],
-      "confidence": "MEDIUM (single-pin evidence)"
+      "confidence": "HIGH"
     }
   ]
 }
