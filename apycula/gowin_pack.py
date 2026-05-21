@@ -269,8 +269,6 @@ _dsp_cell_types = {'ALU54D', 'MULT36X36', 'MULTALU36X18', 'MULTADDALU18X18', 'MU
 def get_bels(data):
     later = []
     belre = re.compile(r"X(\d+)Y(\d+)/(?:GSR|LUT|DFF|IOB|MUX|ALU|ODDR|OSC[ZFHWOA]?|BUF[GS]|RAM16SDP4|RAM16SDP2|RAM16SDP1|PLL|IOLOGIC|CLKDIV2|CLKDIV|BSRAM|ALU|MULTALU18X18|MULTALU27X18|MULTALU36X18|MULTADDALU18X18|MULTADDALU12X12|MULT36X36|MULT18X18|MULT12X12|MULT9X9|PADD18|PADD9|BANDGAP|DQCE|DCS|USERFLASH|EMCU|DHCEN|MIPI_OBUF|MIPI_IBUF|DLLDLY|PINCFG|PLLA|ADC)(\w*)")
-    import os as _os_dbg2
-    _ddbg2 = _os_dbg2.environ.get('GW5A_OVERLAY_DEBUG') == '1'
 
     for cellname, cell in data['modules']['top']['cells'].items():
         if cell['type'].startswith('DUMMY_') or cell['type'] in {'OSER16', 'IDES16'} or 'NEXTPNR_BEL' not in cell['attributes']:
@@ -294,8 +292,6 @@ def get_bels(data):
             later.append((cellname, cell, row, col, num))
             continue
         cell_type = cell['type']
-        if _ddbg2 and 'IOLOGIC' in cell_type:
-            print(f"  [get_bels-debug] yielding type={cell_type} bel={bel} name={cellname[:30]}")
         if cell_type == 'rPLL':
             cell_type = 'RPLLA'
             yield from extra_pll_bels(cell, row, col, num, cellname)
@@ -3217,88 +3213,6 @@ _ff_regset_attrs = {
         'DFFNS': 'SET', 'DFFNSE': 'SET', 'DFFNP': 'SET', 'DFFNPE': 'SET',
         }
 
-# GW5A-25A chipdb-completeness overlay (codex extraction methodology job a62f21d0)
-# Loads from chipdb_overlay_gw5a25a.json when first needed. Each overlay entry
-# lists (ttyp, bel_pattern, predicate, bits). When an IOLOGIC cell is being
-# encoded and the predicate matches the cell's attrs/type, the extra bits are
-# unioned into the tile bits before write. This fills chipdb gaps without
-# editing the msgpack format.
-_gw5a_overlay_cache = None
-def _load_gw5a_overlay():
-    global _gw5a_overlay_cache
-    if _gw5a_overlay_cache is not None:
-        return _gw5a_overlay_cache
-    import json
-    import os
-    import re
-    p = os.path.join(os.path.dirname(__file__), 'chipdb_overlay_gw5a25a.json')
-    if not os.path.exists(p):
-        _gw5a_overlay_cache = []
-        return _gw5a_overlay_cache
-    with open(p, 'r') as f:
-        doc = json.load(f)
-    entries = []
-    for ov in doc.get('overlays', []):
-        entries.append({
-            'id': ov['id'],
-            'ttyp': ov['ttyp'],
-            'bel_pattern': re.compile('^' + ov['bel_pattern'] + '$'),
-            'predicate': ov.get('predicate', {}),
-            'bits': [tuple(b) for b in ov.get('bits', [])],
-        })
-    _gw5a_overlay_cache = entries
-    return entries
-
-
-def _get_gw5a_chipdb_overlay_bits(ttyp, bel, parms, attrs, cell):
-    """Return set of extra (row, col) bits to add at the tile, per the
-    GW5A-25A chipdb-completeness overlay extracted from the Gowin micro-corpus.
-    """
-    import os
-    if device not in {'GW5A-25A', 'GW5AST-138C'}:
-        return set()
-    def _find(name):
-        if name in parms: return parms.get(name)
-        if name in attrs: return attrs.get(name)
-        return None
-    iologic_type = _find('IOLOGIC_TYPE')
-    has_reg_raw = _find('HAS_REG')
-    has_reg_active = bool(has_reg_raw) and str(has_reg_raw).strip('0') != ''
-    oreg_type = _find('OREG_TYPE')
-    debug = os.environ.get('GW5A_OVERLAY_DEBUG') == '1'
-    if debug:
-        print(f"  [overlay-debug] ttyp={ttyp} bel={bel} iologic_type={iologic_type} "
-              f"has_reg={has_reg_raw} oreg_type={oreg_type}")
-    extra = set()
-    for ov in _load_gw5a_overlay():
-        if ov['ttyp'] != ttyp: continue
-        if not ov['bel_pattern'].match(bel): continue
-        pred = ov['predicate']
-        fire = False
-        if 'has_attr' in pred:
-            name = pred['has_attr']
-            want = str(pred.get('attr_value', ''))
-            # Map OUTMODE=OREG → fires when IOLOGICO_EMPTY+HAS_REG
-            if name == 'OUTMODE' and want == 'OREG':
-                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active)
-            elif name == 'CEOMUX_1' and want == '1':
-                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active and
-                        oreg_type is not None and 'CE' in str(oreg_type))
-            elif name.startswith('TREG'):
-                fire = False  # OE-side register not yet wired
-            else:
-                v = _find(name)
-                fire = v is not None and str(v) == want
-        elif 'cell_type' in pred:
-            if pred['cell_type'] == 'IOBUF':
-                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active)
-        if fire:
-            if debug:
-                print(f"  [overlay-fire] {ov['id']}: +{len(ov['bits'])} bits at {bel}")
-            extra.update(ov['bits'])
-    return extra
-
-
 def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
     in_attrs.pop('INIT', None)
     in_attrs.pop('HAS_REG', None)
@@ -3317,25 +3231,12 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
     elif iologic_type == 'IOLOGICO_EMPTY':
-        # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
-        # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
-        # across all 29 OREG-active tiles in that bitstream, Gowin sets
-        #   OUTMODE=OREG    (29/29)
-        #   CLKOMUX=ENABLE  (29/29)
-        #   LSRMUX_LSR=INV  (29/29)
-        #   SRMODE=LSR_OVER_CE (27/29)
-        # OREG_REGSET only when the underlying FF carries a SET behavior
-        # (DFFS/DFFSE/DFFP/DFFPE family). CEOMUX_1 was previously emitted
-        # unconditionally; Gowin only sets it on 4 of 29 tiles, so it is
-        # dropped here and will be re-added structurally once the trigger
-        # condition is identified via the OE / CE-port presence (TODO).
-        # OREG_OUTREGMODE='FF' was previously emitted but Gowin sets it on
-        # 0/29 tiles — it is over-programming and is removed.
         reg_type = param.get('OREG_TYPE', 'DFF')
         in_attrs['OUTMODE'] = 'OREG'
         in_attrs['CLKOMUX'] = 'ENABLE'
+        in_attrs['CEOMUX_1'] = '1'
         in_attrs['LSRMUX_LSR'] = 'INV'
-        in_attrs['SRMODE'] = 'LSR_OVER_CE'
+        in_attrs['OREG_OUTREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['OREG_REGSET'] = _ff_regset_attrs[reg_type]
     # APICULA_IOREG_DEBUG diagnostic print removed (2026-05-19 cleanup; default-OFF, unused).
@@ -3757,11 +3658,7 @@ def get_pullup_io(cfg):
 
 def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
     global adc_ios
-    import os as _os_dbg
-    _ddbg = _os_dbg.environ.get('GW5A_OVERLAY_DEBUG') == '1'
     for typ, row, col, num, parms, attrs, cellname, cell in bels:
-        if _ddbg and 'IOLOGIC' in typ:
-            print(f"  [place-loop] entering typ={typ} num={num} row={row} col={col} cellname={cellname[:50]}")
         tiledata = db[row-1, col-1]
         tile = tilemap[(row-1, col-1)]
 
@@ -4018,21 +3915,6 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                 fuse_col += off[1]
                 fuse_ttyp = db.grid[fuse_row][fuse_col]
             bits = get_shortval_fuses(db, fuse_ttyp, iologic_attrs, table_type)
-            # GW5A-25A chipdb-completeness overlay: see
-            # `~/Projects/tmp/rpi_struct/extraction/chipdb_overlay_gw5a25a.json`
-            # for the per-ttyp+predicate bit lists that apicula's GW5A chipdb
-            # is missing. Bits were extracted via per-pin localized feature
-            # pair-diff against a Gowin micro-corpus (52 builds, codex job
-            # a62f21d0 methodology). Active overlay applies when an IOLOGIC
-            # cell with OUTMODE=OREG is being encoded at a ttyp/bel we have
-            # cross-pin evidence for.
-            import os as _os
-            if _os.environ.get('GW5A_OVERLAY_DEBUG') == '1':
-                print(f"  [iologic-encode] ttyp={fuse_ttyp} table={table_type} "
-                      f"parms.IOLOGIC_TYPE={parms.get('IOLOGIC_TYPE')} attrs.IOLOGIC_TYPE={attrs.get('IOLOGIC_TYPE')} "
-                      f"attrs.HAS_REG={attrs.get('HAS_REG')} attrs.OREG_TYPE={attrs.get('OREG_TYPE')}")
-            overlay_bits = _get_gw5a_chipdb_overlay_bits(fuse_ttyp, table_type, parms, attrs, cell)
-            bits = bits | overlay_bits
             tile = tilemap[(fuse_row, fuse_col)]
             for r, c in bits:
                 tile[r][c] = 1
