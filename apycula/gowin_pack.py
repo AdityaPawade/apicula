@@ -3228,19 +3228,6 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
     if iologic_type == 'IOLOGICI_EMPTY':
         reg_type = param.get('IREG_TYPE', 'DFF')
         in_attrs['IREG_INREGMODE'] = 'FF'
-        # 2026-05-20 (Path A re-attempt, S2986 follow-up): on GW5A-25A, the
-        # IREG_INREGMODE=FF fuse (chipdb bit (0,14)) is gated behind a
-        # CLKIMUX_CLK=INV co-feature in shortval[ttyp]['IOLOGICA'] (key
-        # (35, 41) -> bits {(0,14)}). Without it the IREG enable bit is
-        # silently never written and the IOLOGIC input register stays
-        # disabled on silicon (all-zero reads, matching the morning's
-        # dead-build experience).
-        # ENV-GATED: only active when EXP_HH_DQ12_IOLOGIC=1 so this
-        # encoder change cannot affect any other build that may emit
-        # IOLOGICI_EMPTY cells.
-        if device in {'GW5A-25A', 'GW5AST-138C'} and \
-                os.environ.get('EXP_HH_DQ12_IOLOGIC', '0').lower() not in ('0', 'false', 'no', 'off', ''):
-            in_attrs['CLKIMUX_CLK'] = 'INV'
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
     elif iologic_type == 'IOLOGICO_EMPTY':
