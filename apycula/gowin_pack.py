@@ -3931,6 +3931,38 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
             tile = tilemap[(fuse_row, fuse_col)]
             for r, c in bits:
                 tile[r][c] = 1
+            # 2026-05-21 Option 1A: when EXP_HH_DQ12_IOLOGIC=1 and this is an
+            # IOLOGICI_EMPTY+HAS_REG cell on GW5A, force the LT02<-A6 and
+            # LT13<-A7 PIP fuses for the IOLOGIC input data path. The Path-A
+            # decode showed Gowin sets these PIPs at R37C4 (DQ[12]'s tile)
+            # but OSS nextpnr doesn't route into them, so the IOLOGIC FF has
+            # clock-but-no-data -> reads stuck-at-0. With the env gate, the
+            # only IOLOGICI_EMPTY+HAS_REG cell that fires for EXP_HH is
+            # DQ[12]'s, so this scope is automatically narrow.
+            # NOTE: attrs['IOLOGIC_TYPE'] is set to the ORIGINAL type before
+            # typ gets rewritten to 'IOLOGIC' upstream at this point; the
+            # cell dict's 'type' field is also still IOLOGICI_EMPTY but use
+            # attrs for safety.
+            _dq12_env = os.environ.get('EXP_HH_DQ12_IOLOGIC', '0').lower()
+            _dq12_iol_active = _dq12_env not in ('0', 'false', 'no', 'off', '')
+            # NOTE: in this place() loop, `parms` = cell['parameters'] and
+            # `attrs` = cell['attributes']. HAS_REG is set by nextpnr via
+            # setAttr() so it lives in cell['attributes'] = LOOP's attrs.
+            if (device in {'GW5A-25A', 'GW5AST-138C'} and
+                    attrs.get('IOLOGIC_TYPE') == 'IOLOGICI_EMPTY' and
+                    attrs.get('HAS_REG') and _dq12_iol_active):
+                tdata = db[fuse_row, fuse_col]
+                _force_pips = [('A6', 'LT02'), ('A7', 'LT13')]
+                for _src, _dst in _force_pips:
+                    _pip_bits = tdata.pips.get(_dst, {}).get(_src)
+                    if _pip_bits:
+                        for _br, _bc in _pip_bits:
+                            tile[_br][_bc] = 1
+                        print(f"EXP_HH_DQ12_IOLOGIC force-pip {_src}->{_dst} "
+                              f"at (row={fuse_row}, col={fuse_col}) bits {sorted(_pip_bits)}")
+                    else:
+                        print(f"EXP_HH_DQ12_IOLOGIC force-pip {_src}->{_dst} "
+                              f"at (row={fuse_row}, col={fuse_col}) MISSING in chipdb")
         elif typ in _bsram_cell_types or typ == 'BSRAM_AUX':
             is_aux = (typ == 'BSRAM_AUX')
             if typ == 'BSRAM_AUX':
