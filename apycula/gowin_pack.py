@@ -3358,6 +3358,37 @@ def make_iodelay_attrs(in_attrs, param):
             in_attrs[f'DELAY_DEL{i - 1}'] = '1'
     in_attrs.pop('C_STATIC_DLY', None);
 
+def _gw5a_iodelay_static_taps(in_attrs):
+    dly = in_attrs.get('C_STATIC_DLY')
+    if dly is None:
+        dly = in_attrs.get('IOLOGIC_UNKNOWN118')
+    if dly is None:
+        return 0
+    dly = str(dly)
+    if set(dly) <= {'0', '1'}:
+        return int(dly or '0', 2)
+    dly = int(dly, 10)
+    if dly >= 1000:
+        dly -= 1000
+    return dly
+
+def make_gw5a_iodelay_attrs(fin_attrs, in_attrs, param):
+    if 'IODELAY' not in param:
+        return
+    dly = _gw5a_iodelay_static_taps(in_attrs)
+    in_attrs.pop('C_STATIC_DLY', None)
+    # nextpnr/GW5A can carry C_STATIC_DLY as IOLOGIC_UNKNOWN118. Its shortval
+    # ladder encodes to row-31 cols 3..9, which are not IODELAY tap fuses.
+    in_attrs.pop('IOLOGIC_UNKNOWN118', None)
+    # GW5A-25A has no DELAY_DEL* entries in logicinfo. These numbers are
+    # shortval feature codes, not (attr_idx, value_idx) pairs:
+    # code 32 -> DELAY_DEL0 observed at R36C3 bit (31, 55)
+    # code 38 -> DELAY_DEL6 observed at R36C3 bit (31, 56)
+    if dly & 0x01:
+        fin_attrs.add(32)
+    if dly & 0x40:
+        fin_attrs.add(38)
+
 def set_iologic_fclk(in_attrs, attrs, param, out = True):
     if device not in {'GW5A-25A', 'GW5AST-138C'}:
         if out:
@@ -3535,6 +3566,7 @@ def set_iologic_attrs(db, attrs, param, cellname=None):
         make_iodelay_attrs(in_attrs, param);
 
     if device in {'GW5A-25A'}:
+        make_gw5a_iodelay_attrs(fin_attrs, in_attrs, param)
         set_empty_ioreg_attrs(in_attrs, param, cellname)
 
     for k, val in in_attrs.items():
