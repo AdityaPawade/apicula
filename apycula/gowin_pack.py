@@ -3952,7 +3952,20 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                     attrs.get('IOLOGIC_TYPE') == 'IOLOGICI_EMPTY' and
                     attrs.get('HAS_REG') and _dq12_iol_active):
                 tdata = db[fuse_row, fuse_col]
-                _force_pips = [('A6', 'LT02'), ('A7', 'LT13')]
+                # 2026-05-21 Option 1B attempted LB01->LSR0 force-pip
+                # (Codex a7bc577a Priority 1). Force-pip fires per log
+                # ("force-pip LB01->LSR0 bits [(2,1),(2,6)]") but the
+                # resulting .fs is byte-identical to Option 1A — bits (2,1)
+                # and (2,6) are ALREADY set by Path A's IOLOGIC encoder via
+                # an unidentified attribute path. The apicula decoder still
+                # reports R37C4_LSR0 = R36C4_S27 (the default neighbor wire,
+                # NOT LB01) — likely a multi-PIP pattern ambiguity in the
+                # decoder. Keeping the entry here for completeness; it's a
+                # no-op when bits already pre-set by other IOLOGIC fuses.
+                # Deeper fix (Codex Priority 2) = teach nextpnr to actually
+                # route a known-inactive signal onto R37C4_LB01.
+                _force_pips = [('A6', 'LT02'), ('A7', 'LT13'),
+                                ('LB01', 'LSR0')]
                 for _src, _dst in _force_pips:
                     _pip_bits = tdata.pips.get(_dst, {}).get(_src)
                     if _pip_bits:
