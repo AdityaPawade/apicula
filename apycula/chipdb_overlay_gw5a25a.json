@@ -1,97 +1,69 @@
 {
-  "_comment": "Chipdb overlay for GW5A-25A IOLOGIC OREG path. Bits extracted from Gowin micro-corpus (61 builds) via per-pin localized feature pair-diff (codex methodology, job a62f21d0). Each entry: when the listed predicate is true for an encoded IOLOGIC cell at the matching ttyp+bel, also set the listed extra bits at the cell's tile.",
-  "schema_version": 2,
+  "_comment": "Chipdb overlay for GW5A-25A IOLOGIC OREG path. Bits extracted from Gowin micro-corpus via per-pin localized feature diff (codex methodology, job a62f21d0). Each entry: when the listed predicate is true for an encoded IOLOGIC cell at the matching ttyp+bel, also set the listed extra bits at the cell's tile.",
+  "schema_version": 1,
   "source_corpus": "C:/Users/adity/Projects/tmp/rpi_struct/extraction/corpus_v1/",
   "source_analyzer": "feature_pin_analyzer.py",
   "evidence_min_pins": 2,
   "overlays": [
     {
       "id": "ttyp247_OREG_FF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] OREG enable bits (registered output), attributed via obuf_direct vs obuf_dff at pins A1+B2",
+      "description": "Bits set at ttyp 247 IOLOGIC[A|B] when output FF is present, attributed via obuf_direct vs obuf_dff diff at pins A1+B2 (both slot A, ttyp 247)",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {"has_attr": "OUTMODE", "attr_value": "OREG"},
       "evidence_pins": ["A1", "B2"],
+      "evidence_diff": "obuf_direct vs obuf_dff",
       "bits": [[2, 1], [2, 4], [2, 8], [2, 87], [3, 0], [3, 84], [6, 32], [6, 33], [7, 38], [7, 41]],
       "in_target_delta": [[2, 1], [2, 87], [3, 84]],
-      "confidence": "HIGH"
+      "confidence": "HIGH (cross-pin consistent)"
     },
     {
       "id": "ttyp247_CE_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] CE-enable bits (clock-enabled FF), attributed via obuf_dff vs obuf_dffce at pins A1+B2",
+      "description": "Bits set at ttyp 247 IOLOGIC[A|B] when output FF is CE-enabled (DFFCE), attributed via obuf_dff vs obuf_dffce diff at pins A1+B2",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {"has_attr": "CEOMUX_1", "attr_value": "1"},
       "evidence_pins": ["A1", "B2"],
+      "evidence_diff": "obuf_dff vs obuf_dffce",
       "bits": [[0, 1], [0, 7], [1, 0]],
       "in_target_delta": [[0, 1], [0, 7], [1, 0]],
-      "confidence": "HIGH"
+      "confidence": "HIGH (cross-pin consistent, ALL hit target)"
     },
     {
       "id": "ttyp247_IOBUF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] bidirectional-IOBUF bits, attributed via obuf_dff vs iobuf_dff at pins A1+B2",
+      "description": "Bits set at ttyp 247 IOLOGIC[A|B] when IOBUF (bidirectional) vs OBUF, attributed via obuf_dff vs iobuf_dff diff at pins A1+B2",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {"cell_type": "IOBUF"},
       "evidence_pins": ["A1", "B2"],
+      "evidence_diff": "obuf_dff vs iobuf_dff",
       "bits": [[30, 83], [31, 78]],
       "in_target_delta": [],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp245_OREG_FF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] OREG enable bits, attributed via obuf_direct vs obuf_dff at pins J4+L4 (col-92 IOBs)",
-      "ttyp": 245,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "OUTMODE", "attr_value": "OREG"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[2, 1], [2, 4], [2, 8], [2, 87], [3, 0], [3, 84], [3, 124], [3, 126], [3, 128], [11, 130]],
-      "in_target_delta": [[2, 1], [2, 87], [3, 84]],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp245_CE_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] CE-enable bits, attributed via obuf_dff vs obuf_dffce at pins J4+L4",
-      "ttyp": 245,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "CEOMUX_1", "attr_value": "1"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[0, 1], [1, 0]],
-      "in_target_delta": [[0, 1], [1, 0]],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp245_IOBUF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] bidirectional-IOBUF bits, attributed via obuf_dff vs iobuf_dff at pins J4+L4",
-      "ttyp": 245,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"cell_type": "IOBUF"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[1, 65], [1, 69], [4, 42], [4, 43], [10, 126], [11, 133]],
-      "in_target_delta": [],
-      "confidence": "HIGH"
+      "confidence": "HIGH (cross-pin consistent, matches Gowin EXP_HH R37C4 bit (31,78) which had longval ref)"
     },
     {
       "id": "ttyp245_OE_FF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] tri-state OE register bits (placeholder; predicate inert until apicula emits TREG attrs)",
+      "description": "Bits set at ttyp 245 IOLOGIC[A|B] when OE is registered, attributed via iobuf_dff vs iobuf_dff_oeff diff at pins G1+K4 (col-92 IOBs)",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {"has_attr": "TREG_OUTREGMODE", "attr_value": "FF"},
       "evidence_pins": ["G1", "K4"],
+      "evidence_diff": "iobuf_dff vs iobuf_dff_oeff",
       "bits": [[6, 53], [6, 54], [7, 56]],
       "in_target_delta": [],
-      "confidence": "MEDIUM (inert)"
+      "confidence": "MEDIUM (TREG attr emission not yet wired into apicula encoder, predicate placeholder)"
     },
     {
       "id": "ttyp247_OE_FF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] tri-state OE register bits (placeholder; predicate inert)",
+      "description": "Bits set at ttyp 247 IOLOGIC[A|B] when OE is registered, attributed via iobuf_dff vs iobuf_dff_oeff diff at pins C2+E1",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
       "predicate": {"has_attr": "TREG_OUTREGMODE", "attr_value": "FF"},
       "evidence_pins": ["C2", "E1"],
+      "evidence_diff": "iobuf_dff vs iobuf_dff_oeff",
       "bits": [[5, 53], [5, 54]],
       "in_target_delta": [],
-      "confidence": "MEDIUM (inert)"
+      "confidence": "MEDIUM (TREG attr emission not yet wired into apicula encoder, predicate placeholder)"
     }
   ]
 }
