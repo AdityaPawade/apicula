@@ -1,9 +1,16 @@
 {
-  "_comment": "Chipdb overlay for GW5A-25A IOLOGIC OREG path. Bits extracted from Gowin micro-corpus (61 builds) via per-pin localized feature pair-diff (codex methodology, job a62f21d0). Each entry: when the listed predicate is true for an encoded IOLOGIC cell at the matching ttyp+bel, also set the listed extra bits at the cell's tile.",
+  "_comment": "Chipdb-completeness overlay for GW5A-25A IOLOGIC OREG / CE / IOBUF paths. These bits were DERIVED LOCALLY (not in upstream apicula's GW5A-25A chipdb) by running 61 Gowin micro-corpus builds via gw_sh.exe and per-pin localized feature pair-diff (codex methodology, job a62f21d0, 2026-05-21). When the predicate matches an encoded IOLOGIC cell at the listed ttyp+bel, the encoder unions these extra bits into the tile bitmap. The overlay is DORMANT when no IOLOGICO_EMPTY+HAS_REG cells exist (the nextpnr auto-IOBFF trigger that creates such cells was reverted 2026-05-21 after 3 HW failures on SDRAM-DQ; overlay remains as documented chipdb extension for future activation paths that don't break bidirectional IOB read direction). All extraction provenance: corpus path, source pins, evidence diff, target_delta cross-ref.",
+  "_status": "EXTRACTED-BUT-DORMANT (no current trigger emits IOLOGICO_EMPTY+HAS_REG cells)",
+  "_derivation_methodology": "1) Build N obuf_direct/obuf_dff/obuf_dffce/iobuf_dff/iobuf_dff_oeff variants at M pins via Gowin EDA. 2) For each (template_base, template_with_feature) pair: diff the bits at the pin's local tile. 3) High-confidence attribution: bits added by the feature in >=2 pins of the same ttyp. 4) Cross-ref with target_delta_16dq.json scoreboard (Gowin EXP_HH bits OSS-baseline lacks).",
+  "_known_limitations": "(a) Single-tile ttyps (274/385/396/401) cannot be cross-pin attributed; not in overlay. (b) Only IOLOGICA-side bits extracted; IOLOGICB analogous bits inferred via bel_pattern but not separately verified. (c) TREG (OE-register) predicates 'has_attr: TREG_OUTREGMODE' are INERT — apicula's encoder doesn't emit those attrs yet. (d) Overlay activated only when IOLOGICO_EMPTY cells exist in the netlist; current revertted nextpnr never emits such cells.",
   "schema_version": 2,
   "source_corpus": "C:/Users/adity/Projects/tmp/rpi_struct/extraction/corpus_v1/",
   "source_analyzer": "feature_pin_analyzer.py",
   "evidence_min_pins": 2,
+  "extraction_date": "2026-05-21",
+  "extraction_codex_job": "a62f21d0",
+  "total_bits_in_overlay": 38,
+  "target_delta_hits": 11,
   "overlays": [
     {
       "id": "ttyp247_OREG_FF_bits",
