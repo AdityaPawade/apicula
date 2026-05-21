@@ -1,104 +1,628 @@
 {
-  "_comment": "Chipdb-completeness overlay for GW5A-25A IOLOGIC OREG / CE / IOBUF paths. These bits were DERIVED LOCALLY (not in upstream apicula's GW5A-25A chipdb) by running 61 Gowin micro-corpus builds via gw_sh.exe and per-pin localized feature pair-diff (codex methodology, job a62f21d0, 2026-05-21). When the predicate matches an encoded IOLOGIC cell at the listed ttyp+bel, the encoder unions these extra bits into the tile bitmap. The overlay is DORMANT when no IOLOGICO_EMPTY+HAS_REG cells exist (the nextpnr auto-IOBFF trigger that creates such cells was reverted 2026-05-21 after 3 HW failures on SDRAM-DQ; overlay remains as documented chipdb extension for future activation paths that don't break bidirectional IOB read direction). All extraction provenance: corpus path, source pins, evidence diff, target_delta cross-ref.",
-  "_status": "EXTRACTED-BUT-DORMANT (no current trigger emits IOLOGICO_EMPTY+HAS_REG cells)",
-  "_derivation_methodology": "1) Build N obuf_direct/obuf_dff/obuf_dffce/iobuf_dff/iobuf_dff_oeff variants at M pins via Gowin EDA. 2) For each (template_base, template_with_feature) pair: diff the bits at the pin's local tile. 3) High-confidence attribution: bits added by the feature in >=2 pins of the same ttyp. 4) Cross-ref with target_delta_16dq.json scoreboard (Gowin EXP_HH bits OSS-baseline lacks).",
-  "_known_limitations": "(a) Single-tile ttyps (274/385/396/401) cannot be cross-pin attributed; not in overlay. (b) Only IOLOGICA-side bits extracted; IOLOGICB analogous bits inferred via bel_pattern but not separately verified. (c) TREG (OE-register) predicates 'has_attr: TREG_OUTREGMODE' are INERT — apicula's encoder doesn't emit those attrs yet. (d) Overlay activated only when IOLOGICO_EMPTY cells exist in the netlist; current revertted nextpnr never emits such cells.",
-  "schema_version": 2,
-  "source_corpus": "C:/Users/adity/Projects/tmp/rpi_struct/extraction/corpus_v1/",
-  "source_analyzer": "feature_pin_analyzer.py",
-  "evidence_min_pins": 2,
-  "extraction_date": "2026-05-21",
-  "extraction_codex_job": "a62f21d0",
-  "total_bits_in_overlay": 38,
-  "target_delta_hits": 11,
+  "_comment": "Comprehensive overlay v3: includes ALL 32 visible target_delta bits attributed via per-target-bit signature matching across 179 Gowin micro-corpus builds. Predicates inferred from template signatures (which templates set this bit). LOW-confidence entries (single-pin, ambiguous signature) flagged with MEDIUM in confidence field.",
+  "schema_version": 3,
+  "derivation": {
+    "corpus_path": "C:/Users/adity/Projects/tmp/rpi_struct/extraction/corpus_v1/",
+    "corpus_builds": 179,
+    "method": "per-target-bit signature attribution (feature_pin_analyzer_v2 + target_attribution_v3)",
+    "codex_jobs": [
+      "bd91e322",
+      "a62f21d0",
+      "6c55f8d5"
+    ],
+    "extraction_date": "2026-05-21"
+  },
+  "totals": {
+    "target_delta_unknown": 141,
+    "visible_in_corpus": 32,
+    "overlay_entries": 14,
+    "remaining_invisible": 109
+  },
+  "status": "EXTRACTED-BUT-DORMANT (no current trigger emits IOLOGICO_EMPTY+HAS_REG cells; reverted 2026-05-21 after 3 HW failures)",
+  "invisible_bit_explanation": "109 target_delta_16dq bits are NOT visible in our minimal Gowin micro-corpus. They are likely activated only in EXP_HH-context: SDRAM-DQ multi-bit-bus + specific clock spine + bidirectional registered output + PLL clock domain. Surfacing them would require corpus designs that replicate that context (multi-bit IOBUF arrays clocked from a PLL with explicit synchronous read+write timing). Currently parked.",
   "overlays": [
     {
-      "id": "ttyp247_OREG_FF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] OREG enable bits (registered output), attributed via obuf_direct vs obuf_dff at pins A1+B2",
-      "ttyp": 247,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "OUTMODE", "attr_value": "OREG"},
-      "evidence_pins": ["A1", "B2"],
-      "bits": [[2, 1], [2, 4], [2, 8], [2, 87], [3, 0], [3, 84], [6, 32], [6, 33], [7, 38], [7, 41]],
-      "in_target_delta": [[2, 1], [2, 87], [3, 84]],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp247_CE_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] CE-enable bits (clock-enabled FF), attributed via obuf_dff vs obuf_dffce at pins A1+B2",
-      "ttyp": 247,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "CEOMUX_1", "attr_value": "1"},
-      "evidence_pins": ["A1", "B2"],
-      "bits": [[0, 1], [0, 7], [1, 0]],
-      "in_target_delta": [[0, 1], [0, 7], [1, 0]],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp247_IOBUF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] bidirectional-IOBUF bits, attributed via obuf_dff vs iobuf_dff at pins A1+B2",
-      "ttyp": 247,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"cell_type": "IOBUF"},
-      "evidence_pins": ["A1", "B2"],
-      "bits": [[30, 83], [31, 78]],
-      "in_target_delta": [],
-      "confidence": "HIGH"
-    },
-    {
-      "id": "ttyp245_OREG_FF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] OREG enable bits, attributed via obuf_direct vs obuf_dff at pins J4+L4 (col-92 IOBs)",
+      "id": "ttyp245_sig22868",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['G2', 'J4', 'L2', 'L4'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "OUTMODE", "attr_value": "OREG"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[2, 1], [2, 4], [2, 8], [2, 87], [3, 0], [3, 84], [3, 124], [3, 126], [3, 128], [11, 130]],
-      "in_target_delta": [[2, 1], [2, 87], [3, 84]],
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "G2",
+        "J4",
+        "L2",
+        "L4"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "obuf_dff",
+        "obuf_dffce",
+        "obuf_dffr",
+        "obuf_dffs",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
       "confidence": "HIGH"
     },
     {
-      "id": "ttyp245_CE_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] CE-enable bits, attributed via obuf_dff vs obuf_dffce at pins J4+L4",
+      "id": "ttyp245_sig61074",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff_oeff'] (evidence pins: ['L4'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "CEOMUX_1", "attr_value": "1"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[0, 1], [1, 0]],
-      "in_target_delta": [[0, 1], [1, 0]],
+      "predicate": {
+        "has_attr": "TREG_OUTREGMODE",
+        "attr_value": "FF"
+      },
+      "evidence_pins": [
+        "L4"
+      ],
+      "evidence_signature": [
+        "iobuf_dff_oeff"
+      ],
+      "bits": [
+        [
+          4,
+          45
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          45
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig54523",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['J4', 'L2', 'L4'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "J4",
+        "L2",
+        "L4"
+      ],
+      "evidence_signature": [
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp245_sig95162",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['obuf_dffce'] (evidence pins: ['J4', 'L2'])",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "J4",
+        "L2"
+      ],
+      "evidence_signature": [
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          8
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          8
+        ]
+      ],
       "confidence": "HIGH"
     },
     {
-      "id": "ttyp245_IOBUF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] bidirectional-IOBUF bits, attributed via obuf_dff vs iobuf_dff at pins J4+L4",
+      "id": "ttyp245_sig7895",
+      "description": "ttyp 245 IOLOGIC[A|B] bits triggered by signature ['obuf_dffr', 'obuf_dffs'] (evidence pins: ['J4'])",
       "ttyp": 245,
       "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"cell_type": "IOBUF"},
-      "evidence_pins": ["J4", "L4"],
-      "bits": [[1, 65], [1, 69], [4, 42], [4, 43], [10, 126], [11, 133]],
-      "in_target_delta": [],
-      "confidence": "HIGH"
+      "predicate": {
+        "has_attr": "OREG_REGSET",
+        "attr_value": "_any_"
+      },
+      "evidence_pins": [
+        "J4"
+      ],
+      "evidence_signature": [
+        "obuf_dffr",
+        "obuf_dffs"
+      ],
+      "bits": [
+        [
+          2,
+          6
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          6
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
     },
     {
-      "id": "ttyp245_OE_FF_bits",
-      "description": "ttyp 245 IOLOGIC[A|B] tri-state OE register bits (placeholder; predicate inert until apicula emits TREG attrs)",
-      "ttyp": 245,
-      "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "TREG_OUTREGMODE", "attr_value": "FF"},
-      "evidence_pins": ["G1", "K4"],
-      "bits": [[6, 53], [6, 54], [7, 56]],
-      "in_target_delta": [],
-      "confidence": "MEDIUM (inert)"
-    },
-    {
-      "id": "ttyp247_OE_FF_bits",
-      "description": "ttyp 247 IOLOGIC[A|B] tri-state OE register bits (placeholder; predicate inert)",
+      "id": "ttyp247_sig22868",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['A1', 'B2'])",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
-      "predicate": {"has_attr": "TREG_OUTREGMODE", "attr_value": "FF"},
-      "evidence_pins": ["C2", "E1"],
-      "bits": [[5, 53], [5, 54]],
-      "in_target_delta": [],
-      "confidence": "MEDIUM (inert)"
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "A1",
+        "B2"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "obuf_dff",
+        "obuf_dffce",
+        "obuf_dffr",
+        "obuf_dffs",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "id": "ttyp247_sig18798",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'tbuf_dff'] (evidence pins: ['B2'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "B2"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          4,
+          51
+        ]
+      ],
+      "in_target_delta": [
+        [
+          4,
+          51
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_sig54523",
+      "description": "ttyp 247 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['A1', 'B2'])",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "A1",
+        "B2"
+      ],
+      "evidence_signature": [
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp396_sig53566",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'obuf_direct', 'tbuf_dff'] (evidence pins: ['F2'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "F2"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "obuf_dff",
+        "obuf_dffce",
+        "obuf_dffr",
+        "obuf_dffs",
+        "obuf_direct",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          9,
+          63
+        ]
+      ],
+      "in_target_delta": [
+        [
+          9,
+          63
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp396_sig22868",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['F2'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "F2"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "obuf_dff",
+        "obuf_dffce",
+        "obuf_dffr",
+        "obuf_dffs",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp396_sig54523",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['F2'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "F2"
+      ],
+      "evidence_signature": [
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp396_sig7895",
+      "description": "ttyp 396 IOLOGIC[A|B] bits triggered by signature ['obuf_dffr', 'obuf_dffs'] (evidence pins: ['F2'])",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OREG_REGSET",
+        "attr_value": "_any_"
+      },
+      "evidence_pins": [
+        "F2"
+      ],
+      "evidence_signature": [
+        "obuf_dffr",
+        "obuf_dffs"
+      ],
+      "bits": [
+        [
+          2,
+          6
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          6
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp401_sig22868",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_dff', 'iobuf_dff_oeff', 'iobuf_dffce', 'obuf_dff', 'obuf_dffce', 'obuf_dffr', 'obuf_dffs', 'tbuf_dff'] (evidence pins: ['K1'])",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "OUTMODE",
+        "attr_value": "OREG"
+      },
+      "evidence_pins": [
+        "K1"
+      ],
+      "evidence_signature": [
+        "iobuf_dff",
+        "iobuf_dff_oeff",
+        "iobuf_dffce",
+        "obuf_dff",
+        "obuf_dffce",
+        "obuf_dffr",
+        "obuf_dffs",
+        "tbuf_dff"
+      ],
+      "bits": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "in_target_delta": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp401_sig54523",
+      "description": "ttyp 401 IOLOGIC[A|B] bits triggered by signature ['iobuf_dffce', 'obuf_dffce'] (evidence pins: ['K1'])",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "CEOMUX_1",
+        "attr_value": "1"
+      },
+      "evidence_pins": [
+        "K1"
+      ],
+      "evidence_signature": [
+        "iobuf_dffce",
+        "obuf_dffce"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "in_target_delta": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "confidence": "MEDIUM (single-pin evidence)"
     }
   ]
 }
