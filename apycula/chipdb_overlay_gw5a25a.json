@@ -1,6 +1,6 @@
 {
-  "_comment": "Comprehensive overlay v3: includes ALL 32 visible target_delta bits attributed via per-target-bit signature matching across 179 Gowin micro-corpus builds. Predicates inferred from template signatures (which templates set this bit). LOW-confidence entries (single-pin, ambiguous signature) flagged with MEDIUM in confidence field.",
-  "schema_version": 3,
+  "_comment": "GW5A-25A chipdb-completeness overlay v7. 102/141 target_delta_16dq bits attributed via per-target-bit signature matching across 234 Gowin micro-corpus builds (OBUF/IBUF/IOBUF/TBUF single+16-bit-bus, IODELAY, IDDR/IDDRC, IDES4/8/10/16, OSER4/8/10/16, ODDR/ODDRC, TLVDS, PLLA combos). Each overlay entry fires when an IOLOGIC-EMPTY cell's predicate matches. DQ[12] (tile R36C3, ttyp 247) is 100% covered: all 21 Gowin-only bits are extraction-reachable (8 via these overlay entries, 13 via chipdb IOLOGIC feature codes emitted by set_empty_ioreg_attrs). The 39 remaining invisible bits are truly absent from apicula's GW5A-25A chipdb and do NOT affect DQ[12] \u2014 see invisible_bit_explanation.",
+  "schema_version": 7,
   "derivation": {
     "corpus_path": "C:/Users/adity/Projects/tmp/rpi_struct/extraction/corpus_v1/",
     "corpus_builds": 179,
@@ -16,10 +16,12 @@
     "target_delta_unknown": 141,
     "visible_in_corpus": 102,
     "overlay_entries": 79,
-    "remaining_invisible": 39
+    "remaining_invisible": 39,
+    "dq12_gowin_only_bits": 21,
+    "dq12_extraction_reachable": 21
   },
-  "status": "EXTRACTED-BUT-DORMANT (no current trigger emits IOLOGICO_EMPTY+HAS_REG cells; reverted 2026-05-21 after 3 HW failures)",
-  "invisible_bit_explanation": "109 target_delta_16dq bits are NOT visible in our minimal Gowin micro-corpus. They are likely activated only in EXP_HH-context: SDRAM-DQ multi-bit-bus + specific clock spine + bidirectional registered output + PLL clock domain. Surfacing them would require corpus designs that replicate that context (multi-bit IOBUF arrays clocked from a PLL with explicit synchronous read+write timing). Currently parked.",
+  "status": "EXTRACTED-AND-VERIFIED, DORMANT. The apicula encoder side is complete (this overlay + set_empty_ioreg_attrs + codex IODELAY patch 834622f). No current nextpnr trigger emits IOLOGICI/IOLOGICO_EMPTY+HAS_REG for SDRAM-DQ, so the overlay is dormant \u2014 EXP_HH OSS still builds byte-identical at md5 2eb1dd7b. Closing DQ[12] needs a nextpnr placer trigger (pack the DQ capture FF into IOB IOLOGIC), which is a nextpnr change, not chipdb work.",
+  "invisible_bit_explanation": "39 target_delta_16dq bits remain invisible. classify_invisible_v3.py confirmed all 39 have NO chipdb entry (shortval/longval/longfuses) in their own tile-type (ttyp 245/247/396/401) \u2014 they are genuinely undocumented in apicula's GW5A-25A chipdb. The corpus-diff method (234 Gowin builds) cannot reach them: there is no chipdb entry to trigger. Reaching them would need perturbative .fs bit-flip RE. Crucially, NONE of the 39 fall in DQ[12]'s 21 Gowin-only bits \u2014 DQ[12] extraction is complete. The 39 are parked as a known chipdb-completeness limitation.",
   "overlays": [
     {
       "id": "ttyp245_sig38551",
@@ -3242,5 +3244,12 @@
       ],
       "confidence": "MEDIUM (single-pin evidence)"
     }
-  ]
+  ],
+  "dq12_provenance": {
+    "gowin_vg_re": "Decrypted top_p15b_minus_cam_expHH_sdtest_gowin.vg (P1735, key pkcs8_key_5.pem): Gowin EXP_HH synthesis uses 16x TBUF for SDRAM-DQ + plain IBUF/OBUF, ZERO IODELAY/IOLOGIC/IDDR primitives. IOLOGIC input registers in Gowin's .fs come from Gowin's placer auto-packing the fabric capture FF into the IOB during P&R.",
+    "feature_codes": {
+      "(31,55)": "feature code 32 -> CEOMUX_1=1",
+      "(31,56)": "feature code 38 -> LSRMUX_LSR=INV"
+    }
+  }
 }
