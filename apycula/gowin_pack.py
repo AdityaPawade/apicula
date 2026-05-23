@@ -3314,28 +3314,8 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
     if iologic_type == 'IOLOGICI_EMPTY':
         reg_type = param.get('IREG_TYPE', 'DFF')
         in_attrs['IREG_INREGMODE'] = 'FF'
-        # Input-side mux config — the IOLOGICI_EMPTY branch was previously
-        # missing the input-mux setup that the IOLOGICO_EMPTY branch below
-        # has for the output side (asymmetric, incomplete). Ground-truthed
-        # 2026-05-22 against the Gowin EXP_HH twin's DQ[12] IOLOGIC
-        # (R36C3): a registered input needs CLKIMUX=ENABLE (input clock
-        # mux, mirrors CLKOMUX=ENABLE) and LSRMUX_LSR=INV (shared LSR mux,
-        # IOLOGICO sets it too). Without these the captured register's
-        # clock/reset path is under-configured — HW: DQ[12] inversion
-        # fixed on SDRAM beat A but missed on consecutive beat B.
-        in_attrs['CLKIMUX'] = 'ENABLE'
-        in_attrs['LSRMUX_LSR'] = 'INV'
-        # LSRIMUX_0=0 is a negative shortval key (-39,0) — same encoding as
-        # LSROMUX_0 popped above. Leaving the default attr present
-        # suppresses the negative-key fuse; pop it so the registered-input
-        # LSRIMUX_0 fuse fires, matching the Gowin DQ[12] twin.
-        in_attrs.pop('LSRIMUX_0', None)
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
-        # CE-bearing FF families (DFFCE/DFFCE-derived) need the input
-        # clock-enable mux; mirrors CEOMUX_1 on the output side.
-        if 'CE' in reg_type:
-            in_attrs['CEIMUX_1'] = '1'
     elif iologic_type == 'IOLOGICO_EMPTY':
         # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
         # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
