@@ -5204,20 +5204,48 @@ def main():
         import os as _os
         if _os.environ.get('GW5A_SUBTRACTIVE_OVERLAY', '1') != '0':
             target_row, target_col = 36, 3   # R37C4 = DQ[12]
-            # Load overlay and find unset_bits for ttyp 247 + iologic_dir=I predicate
             overlay_list = _load_gw5a_overlay()
-            print(f"[POST-PASS-UNSET] STARTING. {len(overlay_list)} overlay entries loaded.")
             tt247_entries = [ov for ov in overlay_list if ov.get('ttyp') == 247]
-            print(f"[POST-PASS-UNSET] ttyp=247 entries: {len(tt247_entries)}")
             for ov in tt247_entries:
-                has_unset = 'unset_bits' in ov
-                print(f"[POST-PASS-UNSET]   entry id={ov.get('id')} has_unset={has_unset}")
-                if not has_unset: continue
                 tile = tilemap[(target_row, target_col)]
-                cnt_set = sum(1 for r, c in ov['unset_bits'] if tile[r][c] == 1)
-                for r, c in ov['unset_bits']:
-                    tile[r][c] = 0
-                print(f"[POST-PASS-UNSET]   cleared {cnt_set}/{len(ov['unset_bits'])} bits at R37C4 per {ov['id']}")
+                # Unconditionally apply BOTH set + unset bits (true Gowin replica at R37C4).
+                # Doesn't gate on predicate; works regardless of IOLOGIC migration state.
+                if _os.environ.get('GW5A_R37C4_FORCE_REPLICA', '0') != '0':
+                    if 'bits' in ov:
+                        for r, c in ov['bits']:
+                            tile[r][c] = 1
+                if 'unset_bits' in ov:
+                    for r, c in ov['unset_bits']:
+                        tile[r][c] = 0
+                    print(f"[POST-PASS-UNSET]   R37C4: cleared per {ov['id']}")
+
+            # 2026-05-24 tier-2 DISABLED by default (broke DQ[13] in iter3c).
+            # Set GW5A_R37C5_REPLICA=1 to enable.
+            if _os.environ.get('GW5A_R37C5_REPLICA', '0') != '0':
+                r37c5_set = [
+                    (0, 15), (0, 102), (0, 110), (1, 100), (1, 101), (1, 106), (1, 115), (2, 1),
+                    (2, 6), (2, 87), (3, 84), (4, 11), (4, 12), (4, 42), (4, 47), (4, 51),
+                    (4, 56), (4, 61), (4, 76), (5, 14), (5, 17), (5, 32), (5, 33), (5, 34),
+                    (5, 36), (5, 53), (5, 54), (5, 74), (6, 11), (6, 19), (6, 22), (6, 23),
+                    (6, 26), (6, 30), (6, 53), (6, 54), (6, 106), (6, 107), (6, 108), (6, 114),
+                    (7, 12), (7, 14), (7, 22), (7, 23), (7, 30), (7, 31), (7, 46), (7, 52),
+                    (7, 56), (7, 61), (8, 53), (8, 54), (9, 57), (9, 60), (11, 29), (11, 61),
+                    (11, 62), (11, 64), (11, 65), (11, 66), (30, 60), (30, 75), (31, 59), (31, 69),
+                    (31, 70), (31, 71), (31, 76), (31, 103), (31, 104),
+                ]
+                r37c5_unset = [
+                    (0, 10), (0, 16), (0, 18), (0, 28), (0, 29), (0, 30), (0, 36), (0, 64),
+                    (0, 65), (0, 66), (0, 71), (0, 84), (0, 89), (1, 55), (1, 56), (1, 61),
+                    (1, 63), (1, 82), (1, 83), (2, 12), (2, 17), (2, 38), (3, 10), (3, 11),
+                    (3, 28), (3, 29), (3, 35), (4, 16), (4, 32), (4, 33), (4, 37), (4, 41),
+                    (4, 49), (5, 12), (7, 45), (7, 51), (9, 33), (9, 39), (31, 43),
+                ]
+                tile_r37c5 = tilemap[(36, 4)]
+                for r, c in r37c5_set:
+                    tile_r37c5[r][c] = 1
+                for r, c in r37c5_unset:
+                    tile_r37c5[r][c] = 0
+                print(f"[POST-PASS-R37C5] applied {len(r37c5_set)} set + {len(r37c5_unset)} unset bits at R37C5")
 
     for row in range(db.rows):
         for col in range(db.cols):
