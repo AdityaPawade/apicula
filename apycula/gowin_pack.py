@@ -5276,6 +5276,26 @@ def main():
                                 tile[r][c] = 0
                                 cleared += 1
                         print(f"[POST-PASS-SURGICAL] R37C4: surgical-unset {cleared} bits in {SURGICAL} ({rng})")
+                # 2026-05-24 GOWIN-ADDITIVE EXCLUSION: also test removing specific Gowin-added bits.
+                # Bit-12 break came after adding 23 extras to iter5 (22). Maybe one of the extras itself is the bit-12 culprit.
+                GOWIN_EXCLUDE = _os.environ.get('GW5A_R37C4_GOWIN_EXCLUDE', '').strip().lower()
+                if GOWIN_EXCLUDE:
+                    gowin_exclusions = {
+                        'row7gowin': [(7, 11), (7, 12)],
+                        'row11gowin': [(11, 61), (11, 62), (11, 64)],
+                        'row0_2gowin': [(0, 11), (0, 15), (2, 6)],
+                        'row30gowin': [(30, 52)],
+                        'row7_11gowin': [(7, 11), (7, 12), (11, 61), (11, 62), (11, 64)],
+                        'row0_2_30gowin': [(0, 11), (0, 15), (2, 6), (30, 52)],
+                        'row4_6gowin': [(4, 42), (4, 50), (6, 14), (6, 20), (6, 22), (6, 23)],
+                    }
+                    excl = gowin_exclusions.get(GOWIN_EXCLUDE, [])
+                    if excl:
+                        for r, c in excl:
+                            tile[r][c] = 0
+                        print(f"[POST-PASS-GOWIN-EXCL] R37C4: excluded {len(excl)} Gowin bits ({GOWIN_EXCLUDE})")
+                    else:
+                        print(f"[POST-PASS-GOWIN-EXCL] R37C4: unknown exclusion '{GOWIN_EXCLUDE}'")
 
             # 2026-05-24 tier-2 DISABLED by default (broke DQ[13] in iter3c).
             # Set GW5A_R37C5_REPLICA=1 to enable.
