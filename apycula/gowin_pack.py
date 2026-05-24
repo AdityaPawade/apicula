@@ -3299,8 +3299,56 @@ def _get_gw5a_chipdb_overlay_bits(ttyp, bel, parms, attrs, cell):
         if fire:
             if debug:
                 print(f"  [overlay-fire] {ov['id']}: +{len(ov['bits'])} bits at {bel}")
-            extra.update(ov['bits'])
+            extra.update(tuple(b) for b in ov['bits'])
     return extra
+
+
+def _get_gw5a_chipdb_overlay_unset_bits(ttyp, bel, parms, attrs, cell):
+    """Return set of (row, col) bits to UNSET at the tile, per the GW5A-25A
+    chipdb-completeness subtractive overlay. Mirror of _get_gw5a_chipdb_overlay_bits
+    but reads 'unset_bits' from each overlay entry instead of 'bits'.
+    Used for OSS-only bits that need to be removed to match Gowin's bitstream
+    (2026-05-24 binary diff at R37C4 for DQ[12] bit-28 fix).
+    """
+    import os
+    if device not in {'GW5A-25A', 'GW5AST-138C'}:
+        return set()
+    def _find(name):
+        if name in parms: return parms.get(name)
+        if name in attrs: return attrs.get(name)
+        return None
+    iologic_type = _find('IOLOGIC_TYPE')
+    has_reg_raw = _find('HAS_REG')
+    has_reg_active = bool(has_reg_raw) and str(has_reg_raw).strip('0') != ''
+    oreg_type = _find('OREG_TYPE')
+    extra_unset = set()
+    for ov in _load_gw5a_overlay():
+        if ov['ttyp'] != ttyp: continue
+        if not ov['bel_pattern'].match(bel): continue
+        if 'unset_bits' not in ov: continue
+        pred = ov['predicate']
+        fire = False
+        if 'has_attr' in pred:
+            name = pred['has_attr']
+            want = str(pred.get('attr_value', ''))
+            if name == 'OUTMODE' and want == 'OREG':
+                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active)
+            elif name == 'CEOMUX_1' and want == '1':
+                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active and
+                        oreg_type is not None and 'CE' in str(oreg_type))
+            elif name.startswith('TREG'):
+                fire = False
+            elif name == 'iologic_dir' and want == 'I':
+                fire = (iologic_type == 'IOLOGICI_EMPTY' and has_reg_active)
+            else:
+                v = _find(name)
+                fire = v is not None and str(v) == want
+        elif 'cell_type' in pred:
+            if pred['cell_type'] == 'IOBUF':
+                fire = (iologic_type == 'IOLOGICO_EMPTY' and has_reg_active)
+        if fire:
+            extra_unset.update(tuple(b) for b in ov['unset_bits'])
+    return extra_unset
 
 
 def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
@@ -4068,10 +4116,15 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                       f"parms.IOLOGIC_TYPE={parms.get('IOLOGIC_TYPE')} attrs.IOLOGIC_TYPE={attrs.get('IOLOGIC_TYPE')} "
                       f"attrs.HAS_REG={attrs.get('HAS_REG')} attrs.OREG_TYPE={attrs.get('OREG_TYPE')}")
             overlay_bits = _get_gw5a_chipdb_overlay_bits(fuse_ttyp, table_type, parms, attrs, cell)
+            overlay_unset_bits = _get_gw5a_chipdb_overlay_unset_bits(fuse_ttyp, table_type, parms, attrs, cell)
             bits = bits | overlay_bits
             tile = tilemap[(fuse_row, fuse_col)]
             for r, c in bits:
                 tile[r][c] = 1
+            # Subtractive overlay: unset bits that Gowin doesn't set but apicula's
+            # other encoder paths do set (e.g., 59 OSS-only bits at R37C4 for DQ[12]).
+            for r, c in overlay_unset_bits:
+                tile[r][c] = 0
         elif typ in _bsram_cell_types or typ == 'BSRAM_AUX':
             is_aux = (typ == 'BSRAM_AUX')
             if typ == 'BSRAM_AUX':
