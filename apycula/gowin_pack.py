@@ -3286,6 +3286,10 @@ def _get_gw5a_chipdb_overlay_bits(ttyp, bel, parms, attrs, cell):
                         oreg_type is not None and 'CE' in str(oreg_type))
             elif name.startswith('TREG'):
                 fire = False  # OE-side register not yet wired
+            elif name == 'iologic_dir' and want == 'I':
+                # IOLOGICI_EMPTY+HAS_REG fires this — input-side overlay entries
+                # (2026-05-24 overnight test for DQ[12] bit-28 residual).
+                fire = (iologic_type == 'IOLOGICI_EMPTY' and has_reg_active)
             else:
                 v = _find(name)
                 fire = v is not None and str(v) == want

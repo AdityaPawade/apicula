@@ -3243,6 +3243,27 @@
         ]
       ],
       "confidence": "MEDIUM (single-pin evidence)"
+    },
+    {
+      "id": "ttyp247_R37C4_gowin_exact_31bits_2026-05-24",
+      "description": "TRUE Gowin-vs-OSS binary-bit-diff at R37C4 tile region (rows 437-469, cols 376-496 in bitstream). Gowin twin EXPHH_GOWIN_p15b_minus_cam.fs (working) vs OSS parked9+b780 (broken). 31 bits where Gowin=1 but OSS=0 — these are the EXACT bits OSS needs to set to mimic Gowin's R37C4 configuration. Includes the previously-tested A7+LT13 routes plus 24 additional bits NOT covered by prior overlays. Per user mandate: replicate Gowin's bitstream, do not ship-with-gap.",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": { "has_attr": "iologic_dir", "attr_value": "I" },
+      "evidence_pins": ["B2"],
+      "evidence_signature": ["dq12_gowin_binary_diff_2026-05-24"],
+      "bits": [
+        [0, 11], [0, 15],
+        [4, 32], [4, 33], [4, 36],
+        [5, 32], [5, 33], [5, 34], [5, 36], [5, 41],
+        [6, 14], [6, 20], [6, 22], [6, 23], [6, 27], [6, 31], [6, 53], [6, 54], [6, 109],
+        [7, 11], [7, 57], [7, 62], [7, 108],
+        [8, 73],
+        [11, 61], [11, 62], [11, 64],
+        [30, 52],
+        [31, 54], [31, 55], [31, 78]
+      ],
+      "confidence": "HIGH (true binary bit-diff, HW-pending)"
     }
   ],
   "dq12_provenance": {
