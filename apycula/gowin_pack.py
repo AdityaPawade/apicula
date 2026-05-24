@@ -5206,14 +5206,49 @@ def main():
             target_row, target_col = 36, 3   # R37C4 = DQ[12]
             overlay_list = _load_gw5a_overlay()
             tt247_entries = [ov for ov in overlay_list if ov.get('ttyp') == 247]
+            # 2026-05-24 BISECTION MODE: iter9 fixed bit-28 but broke bit-12.
+            # Bisect which subset of 41 bits does what via GW5A_R37C4_BISECT env var:
+            #   'iter5'  = 22 IOBA-specific only (orig F:10000000 alive baseline)
+            #   'rowX'   = iter5 + 8 row-31 bits (Codex Build X = IOLOGIC mode bits)
+            #   'rowY'   = iter5 + 8 local-data-path bits (Codex Build Y)
+            #   'rowZ'   = iter5 + all extras except row 31 (15 bits) (Codex Build Z)
+            #   anything else (or unset) = full overlay per JSON
+            BISECT = _os.environ.get('GW5A_R37C4_BISECT', '').strip().lower()
+            ITER5_22BITS = [
+                (4, 32), (4, 33), (4, 36),
+                (5, 32), (5, 33), (5, 34), (5, 36), (5, 41), (5, 48),
+                (6, 27), (6, 31), (6, 53), (6, 54), (6, 106), (6, 107), (6, 109),
+                (7, 57), (7, 62), (7, 108),
+                (8, 64), (8, 73), (9, 70),
+            ]
+            ROW31_BITS = [(31, 15), (31, 16), (31, 49), (31, 54), (31, 55), (31, 56), (31, 66), (31, 78)]
+            DATAPATH_BITS = [(4, 42), (4, 50), (6, 14), (6, 20), (6, 22), (6, 23), (7, 11), (7, 12)]
+            NONROW31_EXTRAS = [
+                (0, 11), (0, 15), (2, 6), (4, 42), (4, 50),
+                (6, 14), (6, 20), (6, 22), (6, 23), (7, 11), (7, 12),
+                (11, 61), (11, 62), (11, 64), (30, 52),
+            ]
             for ov in tt247_entries:
                 tile = tilemap[(target_row, target_col)]
-                # Unconditionally apply BOTH set + unset bits (true Gowin replica at R37C4).
-                # Doesn't gate on predicate; works regardless of IOLOGIC migration state.
                 if _os.environ.get('GW5A_R37C4_FORCE_REPLICA', '0') != '0':
-                    if 'bits' in ov:
-                        for r, c in ov['bits']:
-                            tile[r][c] = 1
+                    if BISECT == 'iter5':
+                        bits_to_set = ITER5_22BITS
+                        tag = 'BISECT=iter5 (22 bits)'
+                    elif BISECT == 'rowx':
+                        bits_to_set = ITER5_22BITS + ROW31_BITS
+                        tag = 'BISECT=rowX (iter5+8 row31)'
+                    elif BISECT == 'rowy':
+                        bits_to_set = ITER5_22BITS + DATAPATH_BITS
+                        tag = 'BISECT=rowY (iter5+8 datapath)'
+                    elif BISECT == 'rowz':
+                        bits_to_set = ITER5_22BITS + NONROW31_EXTRAS
+                        tag = 'BISECT=rowZ (iter5+15 non-row31 extras)'
+                    else:
+                        bits_to_set = ov.get('bits', [])
+                        tag = 'full overlay (JSON)'
+                    for r, c in bits_to_set:
+                        tile[r][c] = 1
+                    print(f"[POST-PASS-OVERLAY] R37C4: applied {len(bits_to_set)} bits ({tag})")
                 # Gate unset_bits on separate env var (iter6/8 DEAD when unset stripped fabric routing)
                 if _os.environ.get('GW5A_R37C4_APPLY_UNSET', '0') != '0' and 'unset_bits' in ov:
                     for r, c in ov['unset_bits']:
