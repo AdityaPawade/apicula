@@ -5214,7 +5214,8 @@ def main():
                     if 'bits' in ov:
                         for r, c in ov['bits']:
                             tile[r][c] = 1
-                if 'unset_bits' in ov:
+                # Gate unset_bits on separate env var (iter6/8 DEAD when unset stripped fabric routing)
+                if _os.environ.get('GW5A_R37C4_APPLY_UNSET', '0') != '0' and 'unset_bits' in ov:
                     for r, c in ov['unset_bits']:
                         tile[r][c] = 0
                     print(f"[POST-PASS-UNSET]   R37C4: cleared per {ov['id']}")
