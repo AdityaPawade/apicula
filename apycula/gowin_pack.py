@@ -5254,6 +5254,28 @@ def main():
                     for r, c in ov['unset_bits']:
                         tile[r][c] = 0
                     print(f"[POST-PASS-UNSET]   R37C4: cleared per {ov['id']}")
+                # 2026-05-24 SURGICAL SUBTRACTIVE: iter9 alive but bit-12 broke.
+                # Subtract narrow ranges of OSS-extras to find which conflict with bit-12 capture.
+                SURGICAL = _os.environ.get('GW5A_R37C4_SURGICAL_UNSET', '').strip().lower()
+                if SURGICAL and 'unset_bits' in ov:
+                    row_ranges = {
+                        'rows67': (6, 7),     # datapath neighborhoods (Codex priority)
+                        'rows01': (0, 1),     # IOB/bank header
+                        'rows35': (3, 5),     # middle routing
+                        'rows09': (0, 9),     # all data rows (broader)
+                        'rows34589': set([3,4,5,8,9]),  # exclude 6,7 (datapath) and 0,1 (header)
+                    }
+                    rng = row_ranges.get(SURGICAL)
+                    if rng is None:
+                        print(f"[POST-PASS-SURGICAL] R37C4: unknown range '{SURGICAL}', skipping")
+                    else:
+                        cleared = 0
+                        for r, c in ov['unset_bits']:
+                            in_range = (r in rng) if isinstance(rng, set) else (rng[0] <= r <= rng[1])
+                            if in_range:
+                                tile[r][c] = 0
+                                cleared += 1
+                        print(f"[POST-PASS-SURGICAL] R37C4: surgical-unset {cleared} bits in {SURGICAL} ({rng})")
 
             # 2026-05-24 tier-2 DISABLED by default (broke DQ[13] in iter3c).
             # Set GW5A_R37C5_REPLICA=1 to enable.
