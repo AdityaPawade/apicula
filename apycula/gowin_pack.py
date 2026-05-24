@@ -5247,6 +5247,32 @@ def main():
                     tile_r37c5[r][c] = 0
                 print(f"[POST-PASS-R37C5] applied {len(r37c5_set)} set + {len(r37c5_unset)} unset bits at R37C5")
 
+            # 2026-05-24 iter8: R37C3 LEFT-CORNER replica (ttyp 248).
+            # After iter7 matched R37C4 exactly but DQ[12] still wrong,
+            # next hypothesis: routing leaks through left neighbor at corner.
+            # 60-bit diff Gowin-vs-OSS at R37C3 (50 OSS-extras + 10 Gowin-missing).
+            # Enable via GW5A_R37C3_REPLICA=1.
+            if _os.environ.get('GW5A_R37C3_REPLICA', '0') != '0':
+                r37c3_set = [
+                    (4, 11), (4, 12), (4, 34), (5, 14), (5, 18), (5, 32), (5, 33), (5, 36),
+                    (11, 105), (11, 115),
+                ]
+                r37c3_unset = [
+                    (0, 10), (0, 11), (0, 13), (0, 14), (0, 17), (0, 19), (0, 20), (0, 21),
+                    (0, 25), (0, 46), (0, 47), (0, 52), (0, 54), (0, 55), (0, 56), (0, 58),
+                    (0, 59), (0, 65), (0, 70), (1, 10), (1, 11), (1, 14), (1, 37), (1, 38),
+                    (1, 40), (1, 42), (1, 46), (1, 47), (1, 51), (1, 53), (4, 80), (4, 96),
+                    (5, 75), (5, 97), (6, 13), (6, 82), (7, 12), (7, 74), (7, 75), (7, 76),
+                    (8, 12), (8, 54), (8, 96), (8, 97), (9, 13), (9, 55), (9, 96), (9, 97),
+                    (30, 11), (30, 64),
+                ]
+                tile_r37c3 = tilemap[(36, 2)]
+                for r, c in r37c3_set:
+                    tile_r37c3[r][c] = 1
+                for r, c in r37c3_unset:
+                    tile_r37c3[r][c] = 0
+                print(f"[POST-PASS-R37C3] applied {len(r37c3_set)} set + {len(r37c3_unset)} unset bits at R37C3")
+
     for row in range(db.rows):
         for col in range(db.cols):
             set_const_fuses(db, row, col, tilemap[(row, col)])
