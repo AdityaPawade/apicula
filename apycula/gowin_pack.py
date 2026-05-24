@@ -5191,6 +5191,28 @@ def main():
 
     set_adc_iobuf_fuses(db, tilemap)
 
+    # 2026-05-24 subtractive overlay POST-PASS: apply unset_bits from chipdb_overlay
+    # JSON at the END after all encoders have run. Earlier per-cell unset was
+    # overridden by IOBA/IOBB encoder running later and re-setting row-0 bits.
+    # Currently hardcoded to R37C4 (row 36, col 3) = DQ[12]'s tile = ttyp 247.
+    if device in {'GW5A-25A', 'GW5AST-138C'}:
+        import os as _os
+        if _os.environ.get('GW5A_SUBTRACTIVE_OVERLAY', '1') != '0':
+            target_row, target_col = 36, 3   # R37C4 = DQ[12]
+            # Load overlay and find unset_bits for ttyp 247 + iologic_dir=I predicate
+            try:
+                for ov in _load_gw5a_overlay():
+                    if ov['ttyp'] != 247: continue
+                    if 'unset_bits' not in ov: continue
+                    # Always apply (we know DQ[12]'s IOLOGIC is migrated when env is set)
+                    tile = tilemap[(target_row, target_col)]
+                    for r, c in ov['unset_bits']:
+                        tile[r][c] = 0
+                    if _os.environ.get('GW5A_OVERLAY_DEBUG') == '1':
+                        print(f"  [post-pass-unset] R37C4 ttyp247: cleared {len(ov['unset_bits'])} bits per overlay {ov['id']}")
+            except Exception as _e:
+                pass
+
     for row in range(db.rows):
         for col in range(db.cols):
             set_const_fuses(db, row, col, tilemap[(row, col)])
