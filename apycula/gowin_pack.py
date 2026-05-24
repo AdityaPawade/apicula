@@ -3239,13 +3239,18 @@ def _load_gw5a_overlay():
         doc = json.load(f)
     entries = []
     for ov in doc.get('overlays', []):
-        entries.append({
+        entry = {
             'id': ov['id'],
             'ttyp': ov['ttyp'],
             'bel_pattern': re.compile('^' + ov['bel_pattern'] + '$'),
             'predicate': ov.get('predicate', {}),
             'bits': [tuple(b) for b in ov.get('bits', [])],
-        })
+        }
+        # 2026-05-24: subtractive overlay support — bits to UNSET (for OSS-only
+        # bits that need to be cleared to match Gowin's R37C4 bitstream).
+        if 'unset_bits' in ov:
+            entry['unset_bits'] = [tuple(b) for b in ov['unset_bits']]
+        entries.append(entry)
     _gw5a_overlay_cache = entries
     return entries
 
@@ -5200,18 +5205,19 @@ def main():
         if _os.environ.get('GW5A_SUBTRACTIVE_OVERLAY', '1') != '0':
             target_row, target_col = 36, 3   # R37C4 = DQ[12]
             # Load overlay and find unset_bits for ttyp 247 + iologic_dir=I predicate
-            try:
-                for ov in _load_gw5a_overlay():
-                    if ov['ttyp'] != 247: continue
-                    if 'unset_bits' not in ov: continue
-                    # Always apply (we know DQ[12]'s IOLOGIC is migrated when env is set)
-                    tile = tilemap[(target_row, target_col)]
-                    for r, c in ov['unset_bits']:
-                        tile[r][c] = 0
-                    if _os.environ.get('GW5A_OVERLAY_DEBUG') == '1':
-                        print(f"  [post-pass-unset] R37C4 ttyp247: cleared {len(ov['unset_bits'])} bits per overlay {ov['id']}")
-            except Exception as _e:
-                pass
+            overlay_list = _load_gw5a_overlay()
+            print(f"[POST-PASS-UNSET] STARTING. {len(overlay_list)} overlay entries loaded.")
+            tt247_entries = [ov for ov in overlay_list if ov.get('ttyp') == 247]
+            print(f"[POST-PASS-UNSET] ttyp=247 entries: {len(tt247_entries)}")
+            for ov in tt247_entries:
+                has_unset = 'unset_bits' in ov
+                print(f"[POST-PASS-UNSET]   entry id={ov.get('id')} has_unset={has_unset}")
+                if not has_unset: continue
+                tile = tilemap[(target_row, target_col)]
+                cnt_set = sum(1 for r, c in ov['unset_bits'] if tile[r][c] == 1)
+                for r, c in ov['unset_bits']:
+                    tile[r][c] = 0
+                print(f"[POST-PASS-UNSET]   cleared {cnt_set}/{len(ov['unset_bits'])} bits at R37C4 per {ov['id']}")
 
     for row in range(db.rows):
         for col in range(db.cols):
