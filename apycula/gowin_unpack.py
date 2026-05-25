@@ -958,7 +958,13 @@ def tile2verilog(dbrow, dbcol, bels, pips, clock_pips, mod, cst, db):
     iologic_detected = set()
     disable_oddr = False
     for bel, flags in bels_items:
-        typ, idx = belre.match(bel).groups()
+        m = belre.match(bel)
+        if m is None:
+            # 2026-05-25: skip bel types unknown to this regex (MULT12X12, MULTADDALU,
+            # ADC, GSR etc. — pre-existing in chipdb for GW5A-25A but not
+            # gowin_unpack-supported yet). Silent skip so tile2verilog doesn't crash.
+            continue
+        typ, idx = m.groups()
 
         if typ == "LUT":
             val = 0xffff - sum(1<<f for f in flags)
