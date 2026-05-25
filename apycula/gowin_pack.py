@@ -3295,6 +3295,20 @@ def _get_gw5a_chipdb_overlay_bits(ttyp, bel, parms, attrs, cell):
                 # IOLOGICI_EMPTY+HAS_REG fires this — input-side overlay entries
                 # (2026-05-24 overnight test for DQ[12] bit-28 residual).
                 fire = (iologic_type == 'IOLOGICI_EMPTY' and has_reg_active)
+            elif name == 'iologic_occupied' and want == '1':
+                # 2026-05-25: Universal IOLOGIC-slot-occupied fuses (61 across IOB ttyps).
+                # Fires for ANY IOLOGIC cell type (input or output, with or without HAS_REG).
+                # Extracted from 214-build corpus universal-active signature.
+                fire = iologic_type in {'IOLOGICI_EMPTY', 'IOLOGICO_EMPTY',
+                                         'IDDR', 'IDDRC', 'IDES4', 'IDES8', 'IDES10', 'IDES16',
+                                         'ODDR', 'ODDRC', 'OSER4', 'OSER8', 'OSER10', 'OSER16',
+                                         'IODELAY', 'IVIDEO', 'OVIDEO'}
+            elif name in {'INMODE', 'OUTMODE', 'IODELAY', 'PLL_FB',
+                          'INPUT_REG_FAMILY', 'OUTPUT_REG_FAMILY', 'IOBUF_FAMILY', 'MIXED'}:
+                # 2026-05-25: family-class predicates from auto-extracted 91-fuse additions.
+                # Match against cell's actual attribute value where applicable; else conservatively skip.
+                v = _find(name)
+                fire = v is not None and str(v).upper() == want.upper()
             else:
                 v = _find(name)
                 fire = v is not None and str(v) == want

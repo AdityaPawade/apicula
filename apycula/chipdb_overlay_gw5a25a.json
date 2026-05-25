@@ -18,7 +18,9 @@
     "overlay_entries": 79,
     "remaining_invisible": 39,
     "dq12_gowin_only_bits": 21,
-    "dq12_extraction_reachable": 21
+    "dq12_extraction_reachable": 21,
+    "auto_v2_additions_2026_05_25": 59,
+    "auto_v2_truly_unknown_closed": 91
   },
   "status": "EXTRACTED-AND-VERIFIED, DORMANT. The apicula encoder side is complete (this overlay + set_empty_ioreg_attrs + codex IODELAY patch 834622f). No current nextpnr trigger emits IOLOGICI/IOLOGICO_EMPTY+HAS_REG for SDRAM-DQ, so the overlay is dormant \u2014 EXP_HH OSS still builds byte-identical at md5 2eb1dd7b. Closing DQ[12] needs a nextpnr placer trigger (pack the DQ capture FF into IOB IOLOGIC), which is a nextpnr change, not chipdb work.",
   "invisible_bit_explanation": "39 target_delta_16dq bits remain invisible. classify_invisible_v3.py confirmed all 39 have NO chipdb entry (shortval/longval/longfuses) in their own tile-type (ttyp 245/247/396/401) \u2014 they are genuinely undocumented in apicula's GW5A-25A chipdb. The corpus-diff method (234 Gowin builds) cannot reach them: there is no chipdb entry to trigger. Reaching them would need perturbative .fs bit-flip RE. Crucially, NONE of the 39 fall in DQ[12]'s 21 Gowin-only bits \u2014 DQ[12] extraction is complete. The 39 are parked as a known chipdb-completeness limitation.",
@@ -3246,44 +3248,1885 @@
     },
     {
       "id": "ttyp247_R37C4_gowin_exact_31bits_2026-05-24",
-      "description": "TRUE Gowin-vs-OSS binary-bit-diff at R37C4 tile region (rows 437-469, cols 376-496 in bitstream). Gowin twin EXPHH_GOWIN_p15b_minus_cam.fs (working) vs OSS parked9+b780 (broken). 31 bits where Gowin=1 but OSS=0 — these are the EXACT bits OSS needs to set to mimic Gowin's R37C4 configuration. Includes the previously-tested A7+LT13 routes plus 24 additional bits NOT covered by prior overlays. Per user mandate: replicate Gowin's bitstream, do not ship-with-gap.",
+      "description": "TRUE Gowin-vs-OSS binary-bit-diff at R37C4 tile region (rows 437-469, cols 376-496 in bitstream). Gowin twin EXPHH_GOWIN_p15b_minus_cam.fs (working) vs OSS parked9+b780 (broken). 31 bits where Gowin=1 but OSS=0 \u00e2\u20ac\u201d these are the EXACT bits OSS needs to set to mimic Gowin's R37C4 configuration. Includes the previously-tested A7+LT13 routes plus 24 additional bits NOT covered by prior overlays. Per user mandate: replicate Gowin's bitstream, do not ship-with-gap.",
       "ttyp": 247,
       "bel_pattern": "IOLOGIC[AB]",
-      "predicate": { "has_attr": "iologic_dir", "attr_value": "I" },
-      "evidence_pins": ["B2"],
-      "evidence_signature": ["dq12_gowin_binary_diff_2026-05-24"],
+      "predicate": {
+        "has_attr": "iologic_dir",
+        "attr_value": "I"
+      },
+      "evidence_pins": [
+        "B2"
+      ],
+      "evidence_signature": [
+        "dq12_gowin_binary_diff_2026-05-24"
+      ],
       "bits": [
-        [0, 11], [0, 15],
-        [2, 6],
-        [4, 32], [4, 33], [4, 36], [4, 42], [4, 50],
-        [5, 32], [5, 33], [5, 34], [5, 36], [5, 41], [5, 48],
-        [6, 14], [6, 20], [6, 22], [6, 23], [6, 27], [6, 31], [6, 53], [6, 54], [6, 106], [6, 107], [6, 109],
-        [7, 11], [7, 12], [7, 57], [7, 62], [7, 108],
-        [8, 64], [8, 73],
-        [9, 70],
-        [11, 61], [11, 62], [11, 64],
-        [30, 52],
-        [31, 15], [31, 16], [31, 49], [31, 54], [31, 55], [31, 56], [31, 66], [31, 78]
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          15
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          4,
+          32
+        ],
+        [
+          4,
+          33
+        ],
+        [
+          4,
+          36
+        ],
+        [
+          4,
+          42
+        ],
+        [
+          4,
+          50
+        ],
+        [
+          5,
+          32
+        ],
+        [
+          5,
+          33
+        ],
+        [
+          5,
+          34
+        ],
+        [
+          5,
+          36
+        ],
+        [
+          5,
+          41
+        ],
+        [
+          5,
+          48
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          6,
+          20
+        ],
+        [
+          6,
+          22
+        ],
+        [
+          6,
+          23
+        ],
+        [
+          6,
+          27
+        ],
+        [
+          6,
+          31
+        ],
+        [
+          6,
+          53
+        ],
+        [
+          6,
+          54
+        ],
+        [
+          6,
+          106
+        ],
+        [
+          6,
+          107
+        ],
+        [
+          6,
+          109
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          7,
+          12
+        ],
+        [
+          7,
+          57
+        ],
+        [
+          7,
+          62
+        ],
+        [
+          7,
+          108
+        ],
+        [
+          8,
+          64
+        ],
+        [
+          8,
+          73
+        ],
+        [
+          9,
+          70
+        ],
+        [
+          11,
+          61
+        ],
+        [
+          11,
+          62
+        ],
+        [
+          11,
+          64
+        ],
+        [
+          30,
+          52
+        ],
+        [
+          31,
+          15
+        ],
+        [
+          31,
+          16
+        ],
+        [
+          31,
+          49
+        ],
+        [
+          31,
+          54
+        ],
+        [
+          31,
+          55
+        ],
+        [
+          31,
+          56
+        ],
+        [
+          31,
+          66
+        ],
+        [
+          31,
+          78
+        ]
       ],
       "unset_bits": [
-        [0, 1], [0, 4], [0, 7], [0, 10], [0, 18], [0, 19], [0, 20], [0, 22], [0, 23],
-        [0, 27], [0, 28], [0, 29], [0, 31], [0, 34], [0, 35], [0, 36], [0, 37], [0, 38],
-        [0, 40], [0, 41], [0, 46], [0, 47], [0, 50], [0, 55], [0, 56], [0, 58], [0, 60],
-        [0, 64], [0, 65], [0, 66], [0, 70], [0, 72], [0, 74], [0, 77], [0, 91], [0, 98],
-        [0, 100], [0, 101], [0, 103], [0, 109], [0, 110], [0, 114],
-        [1, 0], [1, 19], [1, 20], [1, 25], [1, 28], [1, 29], [1, 32],
-        [1, 46], [1, 47], [1, 50], [1, 53], [1, 54], [1, 72], [1, 107], [1, 117],
-        [2, 5], [2, 8], [2, 38],
-        [3, 0], [3, 10], [3, 11], [3, 13], [3, 16], [3, 28], [3, 29], [3, 34],
-        [4, 11], [4, 49], [4, 51], [4, 98], [4, 102], [4, 104],
-        [5, 15], [5, 95], [5, 96],
-        [6, 12], [6, 13], [6, 55], [6, 95], [6, 96], [6, 98], [6, 108], [6, 110], [6, 113],
-        [7, 33], [7, 54], [7, 85], [7, 86], [7, 95], [7, 96], [7, 98], [7, 99], [7, 102], [7, 106], [7, 107], [7, 113], [7, 114],
-        [8, 55], [8, 98], [8, 104],
-        [9, 54], [9, 63], [9, 68], [9, 95], [9, 96],
-        [30, 72]
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          19
+        ],
+        [
+          0,
+          20
+        ],
+        [
+          0,
+          22
+        ],
+        [
+          0,
+          23
+        ],
+        [
+          0,
+          27
+        ],
+        [
+          0,
+          28
+        ],
+        [
+          0,
+          29
+        ],
+        [
+          0,
+          31
+        ],
+        [
+          0,
+          34
+        ],
+        [
+          0,
+          35
+        ],
+        [
+          0,
+          36
+        ],
+        [
+          0,
+          37
+        ],
+        [
+          0,
+          38
+        ],
+        [
+          0,
+          40
+        ],
+        [
+          0,
+          41
+        ],
+        [
+          0,
+          46
+        ],
+        [
+          0,
+          47
+        ],
+        [
+          0,
+          50
+        ],
+        [
+          0,
+          55
+        ],
+        [
+          0,
+          56
+        ],
+        [
+          0,
+          58
+        ],
+        [
+          0,
+          60
+        ],
+        [
+          0,
+          64
+        ],
+        [
+          0,
+          65
+        ],
+        [
+          0,
+          66
+        ],
+        [
+          0,
+          70
+        ],
+        [
+          0,
+          72
+        ],
+        [
+          0,
+          74
+        ],
+        [
+          0,
+          77
+        ],
+        [
+          0,
+          91
+        ],
+        [
+          0,
+          98
+        ],
+        [
+          0,
+          100
+        ],
+        [
+          0,
+          101
+        ],
+        [
+          0,
+          103
+        ],
+        [
+          0,
+          109
+        ],
+        [
+          0,
+          110
+        ],
+        [
+          0,
+          114
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          19
+        ],
+        [
+          1,
+          20
+        ],
+        [
+          1,
+          25
+        ],
+        [
+          1,
+          28
+        ],
+        [
+          1,
+          29
+        ],
+        [
+          1,
+          32
+        ],
+        [
+          1,
+          46
+        ],
+        [
+          1,
+          47
+        ],
+        [
+          1,
+          50
+        ],
+        [
+          1,
+          53
+        ],
+        [
+          1,
+          54
+        ],
+        [
+          1,
+          72
+        ],
+        [
+          1,
+          107
+        ],
+        [
+          1,
+          117
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          2,
+          38
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          13
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          28
+        ],
+        [
+          3,
+          29
+        ],
+        [
+          3,
+          34
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          4,
+          49
+        ],
+        [
+          4,
+          51
+        ],
+        [
+          4,
+          98
+        ],
+        [
+          4,
+          102
+        ],
+        [
+          4,
+          104
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          5,
+          95
+        ],
+        [
+          5,
+          96
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          6,
+          13
+        ],
+        [
+          6,
+          55
+        ],
+        [
+          6,
+          95
+        ],
+        [
+          6,
+          96
+        ],
+        [
+          6,
+          98
+        ],
+        [
+          6,
+          108
+        ],
+        [
+          6,
+          110
+        ],
+        [
+          6,
+          113
+        ],
+        [
+          7,
+          33
+        ],
+        [
+          7,
+          54
+        ],
+        [
+          7,
+          85
+        ],
+        [
+          7,
+          86
+        ],
+        [
+          7,
+          95
+        ],
+        [
+          7,
+          96
+        ],
+        [
+          7,
+          98
+        ],
+        [
+          7,
+          99
+        ],
+        [
+          7,
+          102
+        ],
+        [
+          7,
+          106
+        ],
+        [
+          7,
+          107
+        ],
+        [
+          7,
+          113
+        ],
+        [
+          7,
+          114
+        ],
+        [
+          8,
+          55
+        ],
+        [
+          8,
+          98
+        ],
+        [
+          8,
+          104
+        ],
+        [
+          9,
+          54
+        ],
+        [
+          9,
+          63
+        ],
+        [
+          9,
+          68
+        ],
+        [
+          9,
+          95
+        ],
+        [
+          9,
+          96
+        ],
+        [
+          30,
+          72
+        ]
       ],
       "confidence": "HIGH (iter 7: 41 set + 105 unset, EXACT Gowin replica targeted, HW-pending)"
+    },
+    {
+      "id": "tg91_sig00_ttyp50_universal_iologic_active",
+      "ttyp": 50,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          76
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp50_tplfamily_plla",
+      "ttyp": 50,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          3,
+          13
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig00_ttyp383_universal_iologic_active",
+      "ttyp": 383,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp383_tplfamily_plla",
+      "ttyp": 383,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          13,
+          68
+        ],
+        [
+          13,
+          70
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig00_ttyp382_universal_iologic_active",
+      "ttyp": 382,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp395_universal_iologic_active",
+      "ttyp": 395,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp420_universal_iologic_active",
+      "ttyp": 420,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp403_universal_iologic_active",
+      "ttyp": 403,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp421_universal_iologic_active",
+      "ttyp": 421,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp400_universal_iologic_active",
+      "ttyp": 400,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp422_universal_iologic_active",
+      "ttyp": 422,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp387_universal_iologic_active",
+      "ttyp": 387,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp242_universal_iologic_active",
+      "ttyp": 242,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          26
+        ],
+        [
+          0,
+          92
+        ],
+        [
+          0,
+          106
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp466_universal_iologic_active",
+      "ttyp": 466,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp388_universal_iologic_active",
+      "ttyp": 388,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp389_universal_iologic_active",
+      "ttyp": 389,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp423_universal_iologic_active",
+      "ttyp": 423,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp411_universal_iologic_active",
+      "ttyp": 411,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          10,
+          112
+        ],
+        [
+          10,
+          113
+        ],
+        [
+          10,
+          114
+        ],
+        [
+          10,
+          115
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp51_universal_iologic_active",
+      "ttyp": 51,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp272_universal_iologic_active",
+      "ttyp": 272,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          0,
+          4
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          11,
+          5
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig03_ttyp272_mixed_mixed",
+      "ttyp": 272,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 4,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          10,
+          1
+        ],
+        [
+          11,
+          15
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
+    },
+    {
+      "id": "tg91_sig00_ttyp243_universal_iologic_active",
+      "ttyp": 243,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          1,
+          9
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp244_universal_iologic_active",
+      "ttyp": 244,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          3
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp245_universal_iologic_active",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          1,
+          126
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp246_universal_iologic_active",
+      "ttyp": 246,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          132
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp412_universal_iologic_active",
+      "ttyp": 412,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          3
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp419_universal_iologic_active",
+      "ttyp": 419,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          132
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp384_universal_iologic_active",
+      "ttyp": 384,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          3
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp385_universal_iologic_active",
+      "ttyp": 385,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          132
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp401_universal_iologic_active",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          1,
+          126
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp74_universal_iologic_active",
+      "ttyp": 74,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          11,
+          3
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp57_universal_iologic_active",
+      "ttyp": 57,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          1,
+          9
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp54_universal_iologic_active",
+      "ttyp": 54,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          1,
+          126
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp220_universal_iologic_active",
+      "ttyp": 220,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          3,
+          127
+        ],
+        [
+          3,
+          128
+        ],
+        [
+          3,
+          129
+        ],
+        [
+          3,
+          130
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp220_tplfamily_plla",
+      "ttyp": 220,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          6,
+          120
+        ],
+        [
+          6,
+          122
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig02_ttyp220_mixed_mixed",
+      "ttyp": 220,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 7,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          4,
+          122
+        ],
+        [
+          4,
+          123
+        ],
+        [
+          4,
+          124
+        ],
+        [
+          8,
+          127
+        ],
+        [
+          10,
+          134
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
+    },
+    {
+      "id": "tg91_sig00_ttyp247_universal_iologic_active",
+      "ttyp": 247,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp248_universal_iologic_active",
+      "ttyp": 248,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp394_universal_iologic_active",
+      "ttyp": 394,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp405_universal_iologic_active",
+      "ttyp": 405,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp436_universal_iologic_active",
+      "ttyp": 436,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp396_universal_iologic_active",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp274_universal_iologic_active",
+      "ttyp": 274,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp60_universal_iologic_active",
+      "ttyp": 60,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          30,
+          102
+        ],
+        [
+          31,
+          44
+        ],
+        [
+          31,
+          54
+        ],
+        [
+          31,
+          79
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp60_tplfamily_plla",
+      "ttyp": 60,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          30,
+          36
+        ],
+        [
+          30,
+          40
+        ],
+        [
+          31,
+          61
+        ],
+        [
+          31,
+          66
+        ],
+        [
+          31,
+          88
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig02_ttyp60_mixed_mixed",
+      "ttyp": 60,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 7,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          25
+        ],
+        [
+          31,
+          34
+        ],
+        [
+          31,
+          56
+        ],
+        [
+          31,
+          57
+        ],
+        [
+          31,
+          58
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
+    },
+    {
+      "id": "tg91_sig04_ttyp60_mixed_mixed",
+      "ttyp": 60,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 160,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          30,
+          2
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
+    },
+    {
+      "id": "tg91_sig00_ttyp397_universal_iologic_active",
+      "ttyp": 397,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp437_universal_iologic_active",
+      "ttyp": 437,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp251_universal_iologic_active",
+      "ttyp": 251,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp438_universal_iologic_active",
+      "ttyp": 438,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp438_tplfamily_plla",
+      "ttyp": 438,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          9,
+          114
+        ],
+        [
+          10,
+          91
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig00_ttyp407_universal_iologic_active",
+      "ttyp": 407,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp439_universal_iologic_active",
+      "ttyp": 439,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          60
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig00_ttyp49_universal_iologic_active",
+      "ttyp": 49,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_occupied",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 214,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          31,
+          66
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "UNIVERSAL_IOLOGIC_OCCUPIED"
+    },
+    {
+      "id": "tg91_sig01_ttyp392_tplfamily_plla",
+      "ttyp": 392,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          9,
+          126
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig01_ttyp48_tplfamily_plla",
+      "ttyp": 48,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "PLL_FB",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 2,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          30,
+          46
+        ],
+        [
+          30,
+          54
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "TEMPLATE_FAMILY"
+    },
+    {
+      "id": "tg91_sig03_ttyp257_mixed_mixed",
+      "ttyp": 257,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 4,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          2,
+          15
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
+    },
+    {
+      "id": "tg91_sig04_ttyp393_mixed_mixed",
+      "ttyp": 393,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "MIXED",
+        "attr_value": "1"
+      },
+      "evidence_builds_count": 160,
+      "evidence_total_builds": 214,
+      "bits": [
+        [
+          30,
+          14
+        ]
+      ],
+      "confidence": "AUTO_EXTRACTED_corpus_v1",
+      "sig_class": "MIXED"
     }
   ],
   "dq12_provenance": {
