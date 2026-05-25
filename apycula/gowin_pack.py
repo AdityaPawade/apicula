@@ -5391,6 +5391,49 @@ def main():
                     tile_r37c3[r][c] = 0
                 print(f"[POST-PASS-R37C3] applied {len(r37c3_set)} set + {len(r37c3_unset)} unset bits at R37C3")
 
+            # iter33 (2026-05-25): Codex H2 — match Gowin's sparse R37C4 wiring.
+            # Bisect today proved IOLOGIC migration is no-op for bit-28 (iter31)
+            # and CE-disconnect breaks DQ[13] (iter30). Full chipdb diff shows
+            # Gowin uses 33 sparse bits at R37C4 (10 active PIPs); OSS baseline
+            # uses 62 bits / 35 PIPs in totally different topology.
+            #
+            # iter33 = additive ONLY: set 19 specific Gowin-only bits to ENABLE
+            # Gowin's specific PIP choices (CE0<-W211, D1<-S222, E830<-F5,
+            # CLK0<-GB00, LSR0<-LB01, C1<-W101) + SRMODE=LSR_OVER_CE + other
+            # IOLOGICA attrs (OUTMODE=OREG, CLKOMUX=ENABLE, LSRMUX_LSR=INV).
+            # NO unset of baseline-only bits (risk of multi-driving but avoids
+            # breaking baseline data path).
+            # Enable via GW5A_R37C4_ITER33_GOWIN_BITS=1.
+            if _os.environ.get('GW5A_R37C4_ITER33_GOWIN_BITS', '0') != '0':
+                iter33_set = [
+                    # CE0 <- W211 PIP (4 bits)
+                    (0, 1), (0, 4), (0, 7), (1, 0),
+                    # CLK0 <- GB00 PIP (2 bits)
+                    (2, 87), (3, 84),
+                    # LSR0 <- LB01 PIP (2 bits)
+                    (2, 1), (2, 6),
+                    # C1 <- W101 PIP additional bits (baseline has C1<-W242, this adds W101 source)
+                    (4, 43), (4, 50), (5, 48),
+                    # D1 <- S222 PIP additional bit (baseline has D1<-S202)
+                    (9, 66),
+                    # E830 <- F5 PIP additional bit (baseline has E830<-S131 etc.)
+                    (0, 69),
+                    # IOLOGICA attribute bits
+                    (30, 52),   # OUTMODE=OREG
+                    (31, 54),   # CLKOMUX=ENABLE
+                    (31, 56),   # LSRMUX_LSR=INV
+                    (31, 66),   # ?av-40 (Gowin sets, unknown semantics)
+                    (31, 78),   # ?av (Gowin sets, unknown semantics)
+                    (31, 118),  # SRMODE=LSR_OVER_CE  <-- KEY MISSING ATTR
+                ]
+                tile_r37c4 = tilemap[(36, 3)]   # R37C4 = row 36 col 3 (0-indexed)
+                for r, c in iter33_set:
+                    tile_r37c4[r][c] = 1
+                print(f"[POST-PASS-ITER33] R37C4: SET {len(iter33_set)} Gowin-only bits "
+                      f"(CE0<-W211, CLK0<-GB00, LSR0<-LB01, D1<-S222 partial, "
+                      f"E830<-F5 partial, C1<-W101 partial, SRMODE=LSR_OVER_CE, "
+                      f"OUTMODE=OREG, CLKOMUX=ENABLE, LSRMUX_LSR=INV)")
+
     for row in range(db.rows):
         for col in range(db.cols):
             set_const_fuses(db, row, col, tilemap[(row, col)])
