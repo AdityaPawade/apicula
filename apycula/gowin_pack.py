@@ -3373,6 +3373,19 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         in_attrs['IREG_INREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
+        # 2026-05-25 FIX: emit CEIMUX_1=1 to encode CE0=VCC (register always-enabled).
+        # Per OSS-vs-Gowin .fs diff at R37C4: Gowin shows R37C4_CE0=VCC, OSS shows
+        # R37C4_CE0=R37C5_W21 (gated by external signal). Result: OSS register
+        # misses capture cycles for DQ[12] beat-A -> bit-12 wrong. Setting
+        # CEIMUX_1=1 encodes the IOLOGIC input register's CE mux to always-on.
+        # Gated by GW5A_IOLOGICI_FORCE_CE_VCC=1 (default ON when this codepath
+        # fires, opt out with =0).
+        import os as _os
+        _force_ce = _os.environ.get('GW5A_IOLOGICI_FORCE_CE_VCC', '1')
+        if _force_ce != '0' and device in {'GW5A-25A', 'GW5AST-138C'}:
+            in_attrs['CEIMUX_1'] = '1'
+            if cellname:
+                print(f'  [GW5A_IOLOGICI_FORCE_CE_VCC] {cellname}: set CEIMUX_1=1 (CE0=VCC)')
     elif iologic_type == 'IOLOGICO_EMPTY':
         # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
         # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
