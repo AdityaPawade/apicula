@@ -3387,13 +3387,25 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         in_attrs['IREG_INREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
-        # iter30 (2026-05-25): the CE0=VCC fix is now driven ENTIRELY by nextpnr
-        # disconnecting FF.CE before IOLOGIC port migration. Apicula no longer
-        # forces any CE-related attribute here — relying on chipdb default
-        # (no CE0 PIP override = CE0 falls back to VCC). The earlier
-        # GW5A_IOLOGICI_FORCE_CE_VCC env-gated CEIMUX_1='1' attempt
-        # (iter29) was HW-confirmed bad (set bit (31,16) on IOLOGICA → broke
-        # DQ[13]+DQ[14] via shared-resource side-effect). Removed entirely.
+        # iter32 (2026-05-25) — Codex final lever, env-gated default-OFF.
+        # Bisect history:
+        #   baseline:  F:10000000 (bit-28 = DQ[12] beat-B wrong)
+        #   iter9:     F:00001000 (additive overlay shifted bit-28→bit-12)
+        #   iter30:    F:10002000 (IOLOGIC+CE-disc broke DQ[13])
+        #   iter31:    F:10000000 (IOLOGIC-only = baseline; CE-disc was the breaker)
+        # Pattern: every fix shifts WHICH bit fails, never zero wrong.
+        # Codex hypothesis: DDR phase selection / Q-order issue. Force the
+        # closest available chipdb proxy: INMODE='IDDRX1' (attrval=1 ->
+        # bit (31, 104) on IOLOGICA). This enables IDDR mode for the input
+        # register. Expected outcomes: (a) bit-28→bit-12 confirms phase bug;
+        # (b) DQ[13] breaks → shared selector; (c) no change → packer-level.
+        import os as _os
+        _force_iddr = _os.environ.get('EXP_HH_DQ12_FORCE_IDDR', '0')
+        if _force_iddr == '1' and device in {'GW5A-25A', 'GW5AST-138C'}:
+            # Only apply for the DQ[12] iologic cell (cellname matches '_dq12_iobff' suffix).
+            if cellname and 'dq12_iobff' in cellname:
+                in_attrs['INMODE'] = 'IDDRX1'
+                print(f'  [iter32 EXP_HH_DQ12_FORCE_IDDR=1] {cellname}: set INMODE=IDDRX1 (bit (31,104))')
     elif iologic_type == 'IOLOGICO_EMPTY':
         # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
         # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
