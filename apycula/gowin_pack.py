@@ -3387,18 +3387,13 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         in_attrs['IREG_INREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
-        # 2026-05-25 ATTEMPT (DISABLED BY DEFAULT — breaks DQ[13]):
-        # CEIMUX_1=1 was hypothesized to encode CE0=VCC but instead breaks
-        # IOBB (DQ[13] beat-B) — likely encodes a shared tile fuse that
-        # affects both IOLOGICAI and IOLOGICBI. iter26 stuck at BTSZ:200RT;
-        # iter29 → F:30000000. Keeping flag for future deeper investigation
-        # but default OFF (set =1 to re-enable).
-        import os as _os
-        _force_ce = _os.environ.get('GW5A_IOLOGICI_FORCE_CE_VCC', '0')
-        if _force_ce == '1' and device in {'GW5A-25A', 'GW5AST-138C'}:
-            in_attrs['CEIMUX_1'] = '1'
-            if cellname:
-                print(f'  [GW5A_IOLOGICI_FORCE_CE_VCC] {cellname}: set CEIMUX_1=1 (CE0=VCC, KNOWN to break DQ[13])')
+        # iter30 (2026-05-25): the CE0=VCC fix is now driven ENTIRELY by nextpnr
+        # disconnecting FF.CE before IOLOGIC port migration. Apicula no longer
+        # forces any CE-related attribute here — relying on chipdb default
+        # (no CE0 PIP override = CE0 falls back to VCC). The earlier
+        # GW5A_IOLOGICI_FORCE_CE_VCC env-gated CEIMUX_1='1' attempt
+        # (iter29) was HW-confirmed bad (set bit (31,16) on IOLOGICA → broke
+        # DQ[13]+DQ[14] via shared-resource side-effect). Removed entirely.
     elif iologic_type == 'IOLOGICO_EMPTY':
         # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
         # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
