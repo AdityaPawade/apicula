@@ -5403,9 +5403,14 @@ def main():
             # IOLOGICA attrs (OUTMODE=OREG, CLKOMUX=ENABLE, LSRMUX_LSR=INV).
             # NO unset of baseline-only bits (risk of multi-driving but avoids
             # breaking baseline data path).
-            # Enable via GW5A_R37C4_ITER33_GOWIN_BITS=1.
-            if _os.environ.get('GW5A_R37C4_ITER33_GOWIN_BITS', '0') != '0':
-                iter33_set = [
+            # iter33 / iter34 bisect — GW5A_R37C4_ITER33_GOWIN_BITS env values:
+            #   '1' / 'all'  -> iter33 (all 19 bits: routing + IOLOGICA attrs)
+            #   'routing'    -> iter34 (13 routing PIP bits only, no IOLOGICA attrs)
+            #   'attrs'      -> iter34b (6 IOLOGICA attr bits only, no routing PIPs)
+            #   'srmode'     -> iter34c (just (31,118)=SRMODE=LSR_OVER_CE alone)
+            iter33_mode = _os.environ.get('GW5A_R37C4_ITER33_GOWIN_BITS', '0').strip().lower()
+            if iter33_mode != '0':
+                ROUTING_PIP_BITS = [
                     # CE0 <- W211 PIP (4 bits)
                     (0, 1), (0, 4), (0, 7), (1, 0),
                     # CLK0 <- GB00 PIP (2 bits)
@@ -5418,7 +5423,8 @@ def main():
                     (9, 66),
                     # E830 <- F5 PIP additional bit (baseline has E830<-S131 etc.)
                     (0, 69),
-                    # IOLOGICA attribute bits
+                ]
+                IOLOGICA_ATTR_BITS = [
                     (30, 52),   # OUTMODE=OREG
                     (31, 54),   # CLKOMUX=ENABLE
                     (31, 56),   # LSRMUX_LSR=INV
@@ -5426,13 +5432,25 @@ def main():
                     (31, 78),   # ?av (Gowin sets, unknown semantics)
                     (31, 118),  # SRMODE=LSR_OVER_CE  <-- KEY MISSING ATTR
                 ]
-                tile_r37c4 = tilemap[(36, 3)]   # R37C4 = row 36 col 3 (0-indexed)
+                if iter33_mode in ('1', 'all'):
+                    iter33_set = ROUTING_PIP_BITS + IOLOGICA_ATTR_BITS
+                    tag = 'iter33 ALL (routing + attrs, 19 bits)'
+                elif iter33_mode == 'routing':
+                    iter33_set = ROUTING_PIP_BITS
+                    tag = 'iter34 ROUTING-ONLY (13 bits, no IOLOGICA attrs)'
+                elif iter33_mode == 'attrs':
+                    iter33_set = IOLOGICA_ATTR_BITS
+                    tag = 'iter34b ATTRS-ONLY (6 IOLOGICA attr bits, no routing)'
+                elif iter33_mode == 'srmode':
+                    iter33_set = [(31, 118)]
+                    tag = 'iter34c SRMODE-ONLY (just LSR_OVER_CE)'
+                else:
+                    iter33_set = []
+                    tag = f'UNKNOWN mode "{iter33_mode}"'
+                tile_r37c4 = tilemap[(36, 3)]
                 for r, c in iter33_set:
                     tile_r37c4[r][c] = 1
-                print(f"[POST-PASS-ITER33] R37C4: SET {len(iter33_set)} Gowin-only bits "
-                      f"(CE0<-W211, CLK0<-GB00, LSR0<-LB01, D1<-S222 partial, "
-                      f"E830<-F5 partial, C1<-W101 partial, SRMODE=LSR_OVER_CE, "
-                      f"OUTMODE=OREG, CLKOMUX=ENABLE, LSRMUX_LSR=INV)")
+                print(f"[POST-PASS-ITER33/34] R37C4: SET {len(iter33_set)} Gowin bits ({tag})")
 
     for row in range(db.rows):
         for col in range(db.cols):
