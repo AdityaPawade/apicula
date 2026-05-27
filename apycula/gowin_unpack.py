@@ -990,6 +990,8 @@ def tile2verilog(dbrow, dbcol, bels, pips, clock_pips, mod, cst, db):
             eclk = 'HCLK0'
             iol_params = {}
             for paramval in flags:
+                if not isinstance(paramval, str):
+                    continue  # 2026-05-27 unpack-fix
                 param, _, val = paramval.partition('=')
                 if param == 'MODE':
                     iol_mode = val
@@ -1264,8 +1266,12 @@ def tile2verilog(dbrow, dbcol, bels, pips, clock_pips, mod, cst, db):
             #if iostd:
             #    cst.attrs.setdefault(name, {}).update({"IO_TYPE" : iostd})
             for flg in flags:
+                # 2026-05-27 unpack-fix: skip int flags (Gowin bitstreams contain non-string flag IDs)
+                if not isinstance(flg, str):
+                    continue
                 name_val = flg.split('=')
-                cst.attrs.setdefault(name, {}).update({name_val[0] : name_val[1]})
+                if len(name_val) >= 2:
+                    cst.attrs.setdefault(name, {}).update({name_val[0] : name_val[1]})
 
     # gnd = codegen.Primitive("GND", "mygnd")
     # gnd.portmap["G"] = "VSS"

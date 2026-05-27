@@ -4805,7 +4805,18 @@ def route(db, tilemap, pips):
                         tile[r][c] = 1
         return fuse_set
 
+    _non_lb_lsr_count = 0
+    _non_lb_lsr_examples = []
     for row, col, src, dest in pips:
+        # 2026-05-27 LSR-LB diagnostic: log non-LB sources routing to LSR pins
+        # Hypothesis: physical DFFRE.RESET only accepts LB-line sources (Gowin uses 91% LB)
+        if (device in {'GW5A-25A', 'GW5AST-138C'} and
+                isinstance(dest, str) and dest.startswith('LSR') and
+                len(dest) > 3 and dest[3].isdigit() and
+                isinstance(src, str) and not src.startswith('LB')):
+            _non_lb_lsr_count += 1
+            if len(_non_lb_lsr_examples) < 5:
+                _non_lb_lsr_examples.append(f"R{row}C{col} {src}->{dest}")
         if device in {'GW5A-25A', 'GW5AST-138C'} and is_clock_pip(src, dest):
             set_clock_fuses(row, col, src, dest)
             continue
@@ -4886,6 +4897,10 @@ def route(db, tilemap, pips):
             tile[row][col] = 1
 
     # R43: force-enable was a no-op (wrote fuses already set elsewhere). Removed.
+    # 2026-05-27 LSR-LB diagnostic summary
+    if _non_lb_lsr_count > 0:
+        print(f"[LSR-LB] {_non_lb_lsr_count} non-LB sources routed to LSR pins (Gowin twin uses 91% LB).")
+        print(f"[LSR-LB] First examples: {_non_lb_lsr_examples}")
 
 def header_footer(db, bs, compress):
     """
