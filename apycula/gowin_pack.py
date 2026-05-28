@@ -3809,6 +3809,14 @@ def place_dff(db, tiledata, tile, parms, num, mode, row, col, slice_attrvals, ha
         # are set/reset/clear/preset port needed?
         if mode not in {'DFF', 'DFFN'}:
             dff_attrs.update({'LSRONMUX': 'LSRMUX'})
+        else:
+            # iter70b (Codex round 7 + user-confirmed fingerprint vs Gowin twin):
+            # Plain DFF/DFFN MUST explicitly disable the LSR (set/reset) input.
+            # Without LSRONMUX=0, the fuse default leaves LSR0 active, which holds
+            # the FF's Q at its reset value forever (matches iter62 bug pattern).
+            # Symptom in iter70a: transaction_in_progress DFF Q stuck at 0 despite
+            # D=1, CE=VCC, RESET-cone=0 — fuse-level LSR was still asserting.
+            dff_attrs.update({'LSRONMUX': '0'})
         # invert clock?
         if mode in {'DFFN', 'DFFNR', 'DFFNC', 'DFFNP', 'DFFNS'}:
             dff_attrs.update({'CLKMUX_CLK': 'INV'})
