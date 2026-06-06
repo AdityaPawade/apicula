@@ -2753,6 +2753,15 @@ def fse_create_clocks(dev, device, dat: Datfile, fse):
                     dcs[f'selforce'] = 'D3'
                     dcs['clksel'] = ['D2', 'A3', 'B3', 'C3']
 
+def fse_fix_gw5a25a_r37c4_gb00(dev, device):
+    if device != 'GW5A-25A':
+        return
+    # EXP_HH DQ[14] is on R37C4_IOA. Gowin sources this IOLOGIC CLK0
+    # through R37C1_GB00; keep the corner GB00 tap in that same node.
+    node_name = add_node(dev, 'X2Y36/GBO0', 'GLOBAL_CLK', 36, 0, 'GB00')
+    node_name = add_node(dev, node_name, 'GLOBAL_CLK', 36, 2, 'GBO0')
+    add_node(dev, node_name, 'GLOBAL_CLK', 36, 3, 'GB00')
+
 # As can be seen from the diagram in ‘UG306-1.0.6E_Arora V Clock User
 # Guide.pdf’, the clock wires are divided into upper and lower halves.
 # Experiments have shown that these halves are not organised into a 2x2 matrix
@@ -3961,6 +3970,7 @@ def from_fse(device, fse, dat: Datfile):
     dev.tiles = tiles
     dev.grid = fse['header']['grid'][61]  # List of lists of ttyp indices
     fse_create_clocks(dev, device, dat, fse)
+    fse_fix_gw5a25a_r37c4_gb00(dev, device)
     fse_create_spine_select_wires(dev, device)
     fse_create_pll_clock_aliases(dev, device)
     fse_create_bottom_io(dev, device)
@@ -6036,4 +6046,3 @@ def pll_pads(dev, device, pad_locs):
         return
     for loc, pll_data in _pll_pads[device].items():
         dev.pad_pll[loc] = pll_data
-
