@@ -3406,6 +3406,15 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
             if cellname and 'dq12_iobff' in cellname:
                 in_attrs['INMODE'] = 'IDDRX1'
                 print(f'  [iter32 EXP_HH_DQ12_FORCE_IDDR=1] {cellname}: set INMODE=IDDRX1 (bit (31,104))')
+        # ndpc17 (2026-06-07): Gowin R37C4 IVIDEO uses INMODE=VIDEORX, encoded on
+        # GW5A as LVDSIN (attrval 9 -> bits (31,104/105/106) on IOLOGICA). Our DQ[14]
+        # migration is a plain IOLOGICI_EMPTY register (INMODE unset). Force LVDSIN as
+        # a DIAGNOSTIC (Codex ndpc17: phase/Q-order guess, physical Q4 = IVIDEO Q1;
+        # "quick diagnostic only — if it does not fix HW, ship Gowin").
+        if _os.environ.get('EXP_HH_DQ14_INMODE_LVDSIN', '0') == '1' \
+           and device in {'GW5A-25A', 'GW5AST-138C'} and cellname and 'dq14_iobff' in cellname:
+            in_attrs['INMODE'] = 'LVDSIN'
+            print(f'  [ndpc17 EXP_HH_DQ14_INMODE_LVDSIN=1] {cellname}: set INMODE=LVDSIN (bits (31,104/105/106))')
     elif iologic_type == 'IOLOGICO_EMPTY':
         # GW5A IOLOGICO_EMPTY+HAS_REG attribute set, ground-truthed against the
         # Gowin EDA-built EXPHH_loaderfit twin (S2965 ..GOWIN_d69c85ef.fs):
