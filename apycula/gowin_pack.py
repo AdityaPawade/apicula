@@ -3667,6 +3667,19 @@ def set_iologic_attrs(db, attrs, param, cellname=None):
     if device in {'GW5A-25A'}:
         make_gw5a_iodelay_attrs(fin_attrs, in_attrs, param)
         set_empty_ioreg_attrs(in_attrs, param, cellname)
+        # 2026-06-10 SDRAM-clk phase root cause: OSS ODDR-forwarded sdram_clk is
+        # ~tight to the internal clock -> the SDRAM read-data eye straddles the
+        # posedge sampling grid; corner ball B2 (DQ[14]) misses. Gowin's fabric
+        # ~clk lag re-centers the eye; the router can't reproduce that (arch_fail
+        # clk->LUT). Equivalent data-side fix: capture DQ[14] on the FALLING edge
+        # (CLKIMUX_CLK=INV on its IOLOGIC) = +half-cycle sampling shift to the
+        # eye center. FSM cycle accounting unchanged (pad FF settles ~9ns before
+        # the fabric posedge latch). Applies to IOLOGICI_EMPTY and IVIDEO alike.
+        import os as _os_ne
+        if _os_ne.environ.get('EXP_HH_DQ14_NEGEDGE_CAPTURE', '0') == '1' \
+           and cellname and 'dq14_iobff' in cellname:
+            in_attrs['CLKIMUX_CLK'] = 'INV'
+            print(f'  [EXP_HH_DQ14_NEGEDGE_CAPTURE=1] {cellname}: CLKIMUX_CLK=INV (negedge DQ[14] capture, eye re-center)')
 
     for k, val in in_attrs.items():
         if k not in attrids.iologic_attrids:
