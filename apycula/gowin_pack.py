@@ -329,12 +329,15 @@ def get_pips(data):
                 if src.startswith('XD'):
                     if dest.startswith('F'):
                         continue
-                    # pass-though LUT
-                    num = dest[1]
-                    init = {'A': '1010101010101010', 'B': '1100110011001100',
-                            'C': '1111000011110000', 'D': '1111111100000000'}[dest[0]]
-                    _pip_bels.append(("LUT4", int(col) + 1, int(row) + 1, num, {"INIT": init}, {}, f'$PACKER_PASS_LUT_{len(_pip_bels)}', None))
-                    continue
+                    if dest[0] in 'ABCD':
+                        # pass-though LUT
+                        num = dest[1]
+                        init = {'A': '1010101010101010', 'B': '1100110011001100',
+                                'C': '1111000011110000', 'D': '1111111100000000'}[dest[0]]
+                        _pip_bels.append(("LUT4", int(col) + 1, int(row) + 1, num, {"INIT": init}, {}, f'$PACKER_PASS_LUT_{len(_pip_bels)}', None))
+                        continue
+                    # 2026-06-10 REG_SD: DFF.D fed via the slice SD input -> plain
+                    # routing pip, no pass-through LUT (fixes KeyError 'S').
                 yield int(col) + 1, int(row) + 1, dest, src
             elif pip and "DUMMY" not in pip:
                 print("Invalid pip:", pip)
