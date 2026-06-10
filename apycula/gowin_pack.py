@@ -316,6 +316,10 @@ def get_bels(data):
                 cell['parameters'], cell['attributes'], sanitize_name(cellname), cell)
 
 _pip_bels = []
+# 2026-06-10 REG_SD: slices whose register D arrives via the SEL[z]->XD[z]
+# direct path. Filled while route() drains get_pips() (which runs before
+# place()); place_dff() reads it to emit REG{z%2}_SD=SIG.
+_reg_sd_regs = set()
 def get_pips(data):
     pipre = re.compile(r"X(\d+)Y(\d+)/([\w_]+)/([\w_]+)")
     for net in data['modules']['top']['netnames'].values():
@@ -336,8 +340,17 @@ def get_pips(data):
                                 'C': '1111000011110000', 'D': '1111111100000000'}[dest[0]]
                         _pip_bels.append(("LUT4", int(col) + 1, int(row) + 1, num, {"INIT": init}, {}, f'$PACKER_PASS_LUT_{len(_pip_bels)}', None))
                         continue
-                    # 2026-06-10 REG_SD: DFF.D fed via the slice SD input -> plain
-                    # routing pip, no pass-through LUT (fixes KeyError 'S').
+                    if dest.startswith('SEL'):
+                        # 2026-06-10 REG_SD: SEL[z]->XD[z] is the per-register
+                        # direct-D input mux, encoded as CLS shortval attr
+                        # REG{z%2}_SD=SIG (fuses present for ttyps
+                        # 17/18/19/408/409, all CLS0-3), NOT a routing pip.
+                        # The net's route up to SEL[z] is normal pips and
+                        # still yields below on its own arcs.
+                        _reg_sd_regs.add((int(col) + 1, int(row) + 1, int(src[2:])))
+                        continue
+                    # any other XD source falls through and fails loudly in
+                    # route() -- never skip silently (EXP_KK/EXP_LL burn).
                 yield int(col) + 1, int(row) + 1, dest, src
             elif pip and "DUMMY" not in pip:
                 print("Invalid pip:", pip)
@@ -3821,6 +3834,11 @@ def place_alu(db, tiledata, tile, parms, num, row, col, slice_attrvals):
 def place_dff(db, tiledata, tile, parms, num, mode, row, col, slice_attrvals, has_ce_port,  is_latch=False):
         dff_attrs = slice_attrvals.setdefault((row, col, int(num) // 2), {})
         dff_attrs.update({'REGMODE': 'LATCH' if is_latch else 'FF'})
+        if (row, col, int(num)) in _reg_sd_regs:
+            # 2026-06-10 REG_SD: D arrives via SEL[z]->XD[z] (recorded in
+            # get_pips); switch this register's XD mux from LUT-F to the
+            # direct SD input.
+            dff_attrs.update({f'REG{int(num) % 2}_SD': 'SIG'})
         if has_ce_port:
             dff_attrs.update({'CEMUX_1': 'UNKNOWN', 'CEMUX_CE': 'SIG'})
         else:
@@ -4923,9 +4941,12 @@ def route(db, tilemap, pips):
                         if src not in srcs:
                             bits |= fuses
         except KeyError:
-            print(src, dest, "not found in tile", row, col)
-            breakpoint()
-            continue
+            # 2026-06-10: hard-fail instead of interactive breakpoint (which
+            # dies as bdb.BdbQuit in unattended builds). A pip without chipdb
+            # fuses must never be skipped silently -- skipped arcs mean
+            # undriven inputs on silicon (EXP_KK/EXP_LL dead-chip burn).
+            raise Exception(f"pip {src}->{dest} has no fuses in tile ({row},{col}) "
+                            f"ttyp={db.grid[row-1][col-1]} -- missing chipdb entry") from None
         for row, col in bits:
             tile[row][col] = 1
 
