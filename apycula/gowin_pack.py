@@ -3388,10 +3388,18 @@ def _get_gw5a_chipdb_overlay_unset_bits(ttyp, bel, parms, attrs, cell):
 
 def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
     in_attrs.pop('INIT', None)
-    in_attrs.pop('HAS_REG', None)
-    in_attrs.pop('IREG_TYPE', None)
-    in_attrs.pop('OREG_TYPE', None)
-    if 'HAS_REG' not in param:
+    # nextpnr delivers HAS_REG / IREG_TYPE / OREG_TYPE as cell ATTRIBUTES
+    # (setAttr since iter30; the HW-proven PATHA DQ12 netlist carries them
+    # there). Accept attrs as well as params. The attr value arrives as a
+    # 32-char bitstring ("0...01"), so truthiness must strip zeros.
+    # REGRESSION FIX 2026-06-11: the param-only gate (r35-recovery import)
+    # silently skipped IREG_INREGMODE for every attr-carried cell -> input
+    # registers never enabled -> all-16 IOLOGIC build read constant zeros.
+    attr_has_reg = in_attrs.pop('HAS_REG', None)
+    attr_ireg_type = in_attrs.pop('IREG_TYPE', None)
+    attr_oreg_type = in_attrs.pop('OREG_TYPE', None)
+    has_reg = param.get('HAS_REG', attr_has_reg)
+    if not (bool(has_reg) and str(has_reg).strip('0') != ''):
         return
     # GW5A encodes LSROMUX_0=0 as a negative shortval key. Leaving the
     # default attr present suppresses that fuse and decodes as a spurious
@@ -3399,7 +3407,7 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
     in_attrs.pop('LSROMUX_0', None)
     iologic_type = param['IOLOGIC_TYPE']
     if iologic_type == 'IOLOGICI_EMPTY':
-        reg_type = param.get('IREG_TYPE', 'DFF')
+        reg_type = param.get('IREG_TYPE', attr_ireg_type or 'DFF')
         in_attrs['IREG_INREGMODE'] = 'FF'
         if reg_type in _ff_regset_attrs:
             in_attrs['IREG_REGSET'] = _ff_regset_attrs[reg_type]
@@ -3446,7 +3454,7 @@ def set_empty_ioreg_attrs(in_attrs, param, cellname=None):
         # condition is identified via the OE / CE-port presence (TODO).
         # OREG_OUTREGMODE='FF' was previously emitted but Gowin sets it on
         # 0/29 tiles — it is over-programming and is removed.
-        reg_type = param.get('OREG_TYPE', 'DFF')
+        reg_type = param.get('OREG_TYPE', attr_oreg_type or 'DFF')
         in_attrs['OUTMODE'] = 'OREG'
         in_attrs['CLKOMUX'] = 'ENABLE'
         in_attrs['LSRMUX_LSR'] = 'INV'
