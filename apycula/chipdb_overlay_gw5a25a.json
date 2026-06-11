@@ -3247,6 +3247,322 @@
       "confidence": "MEDIUM (single-pin evidence)"
     },
     {
+      "id": "ttyp245_EXP_HH_DQ_IOLOGICI_gowin_same_ttyp_21bits_2026-06-11",
+      "description": "EXP_HH_DQ_IOLOGIC_ALL same-ttyp Gowin-vs-OSS localized delta from S2965 EXPHH_loaderfit_GOWIN_d69c85ef.fs vs top_p15b_minus_cam_expHH_oss.fs. Applies only to IOLOGICI_EMPTY+HAS_REG input-register cells via iologic_dir=I; no cross-ttyp bit copying.",
+      "ttyp": 245,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_dir",
+        "attr_value": "I"
+      },
+      "evidence_pins": [
+        "R18C92",
+        "R22C92",
+        "R24C92",
+        "R31C92"
+      ],
+      "evidence_signature": [
+        "EXP_HH_DQ_IOLOGIC_ALL_S2965_gowin_vs_oss_same_ttyp_2026-06-11"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ],
+        [
+          3,
+          126
+        ],
+        [
+          3,
+          128
+        ],
+        [
+          3,
+          133
+        ],
+        [
+          3,
+          135
+        ],
+        [
+          4,
+          50
+        ],
+        [
+          5,
+          101
+        ],
+        [
+          7,
+          53
+        ],
+        [
+          7,
+          54
+        ],
+        [
+          7,
+          106
+        ],
+        [
+          7,
+          107
+        ],
+        [
+          8,
+          96
+        ],
+        [
+          10,
+          126
+        ],
+        [
+          11,
+          130
+        ]
+      ],
+      "confidence": "HIGH (multi-tile same-ttyp recurring delta)"
+    },
+    {
+      "id": "ttyp396_EXP_HH_DQ_IOLOGICI_gowin_same_ttyp_22bits_2026-06-11",
+      "description": "EXP_HH_DQ_IOLOGIC_ALL same-ttyp Gowin-vs-OSS localized delta from S2965 EXPHH_loaderfit_GOWIN_d69c85ef.fs vs top_p15b_minus_cam_expHH_oss.fs. Applies only to IOLOGICI_EMPTY+HAS_REG input-register cells via iologic_dir=I; no cross-ttyp bit copying.",
+      "ttyp": 396,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_dir",
+        "attr_value": "I"
+      },
+      "evidence_pins": [
+        "R37C26"
+      ],
+      "evidence_signature": [
+        "EXP_HH_DQ_IOLOGIC_ALL_S2965_gowin_vs_oss_same_ttyp_2026-06-11"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          69
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ],
+        [
+          4,
+          50
+        ],
+        [
+          4,
+          51
+        ],
+        [
+          4,
+          56
+        ],
+        [
+          4,
+          60
+        ],
+        [
+          5,
+          53
+        ],
+        [
+          5,
+          54
+        ],
+        [
+          9,
+          63
+        ],
+        [
+          30,
+          52
+        ],
+        [
+          31,
+          54
+        ],
+        [
+          31,
+          56
+        ],
+        [
+          31,
+          66
+        ],
+        [
+          31,
+          78
+        ],
+        [
+          31,
+          118
+        ]
+      ],
+      "confidence": "MEDIUM (single same-ttyp DQ tile available)"
+    },
+    {
+      "id": "ttyp401_EXP_HH_DQ_IOLOGICI_gowin_same_ttyp_21bits_2026-06-11",
+      "description": "EXP_HH_DQ_IOLOGIC_ALL same-ttyp Gowin-vs-OSS localized delta from S2965 EXPHH_loaderfit_GOWIN_d69c85ef.fs vs top_p15b_minus_cam_expHH_oss.fs. Applies only to IOLOGICI_EMPTY+HAS_REG input-register cells via iologic_dir=I; no cross-ttyp bit copying.",
+      "ttyp": 401,
+      "bel_pattern": "IOLOGIC[AB]",
+      "predicate": {
+        "has_attr": "iologic_dir",
+        "attr_value": "I"
+      },
+      "evidence_pins": [
+        "R20C92"
+      ],
+      "evidence_signature": [
+        "EXP_HH_DQ_IOLOGIC_ALL_S2965_gowin_vs_oss_same_ttyp_2026-06-11"
+      ],
+      "bits": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          87
+        ],
+        [
+          3,
+          84
+        ],
+        [
+          3,
+          126
+        ],
+        [
+          3,
+          128
+        ],
+        [
+          3,
+          133
+        ],
+        [
+          3,
+          135
+        ],
+        [
+          4,
+          48
+        ],
+        [
+          6,
+          62
+        ],
+        [
+          6,
+          106
+        ],
+        [
+          6,
+          107
+        ],
+        [
+          6,
+          114
+        ],
+        [
+          7,
+          108
+        ],
+        [
+          9,
+          72
+        ],
+        [
+          10,
+          126
+        ],
+        [
+          11,
+          130
+        ]
+      ],
+      "confidence": "MEDIUM (single same-ttyp DQ tile available)"
+    },
+    {
       "id": "ttyp247_R37C4_gowin_exact_31bits_2026-05-24",
       "description": "TRUE Gowin-vs-OSS binary-bit-diff at R37C4 tile region (rows 437-469, cols 376-496 in bitstream). Gowin twin EXPHH_GOWIN_p15b_minus_cam.fs (working) vs OSS parked9+b780 (broken). 31 bits where Gowin=1 but OSS=0 \u00e2\u20ac\u201d these are the EXACT bits OSS needs to set to mimic Gowin's R37C4 configuration. Includes the previously-tested A7+LT13 routes plus 24 additional bits NOT covered by prior overlays. Per user mandate: replicate Gowin's bitstream, do not ship-with-gap.",
       "ttyp": 247,
