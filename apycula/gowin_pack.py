@@ -1154,6 +1154,39 @@ def _plla_clkin_sel_from_site(pll_desc):
         raise Exception(f"Can't derive PLLA CLKIN selector from site CLKIN wire {clkin}")
     return f"CLKIN{m.group(1)}"
 
+def _net_routing_for_bit(bit):
+    if pnr is None:
+        return None
+    for net in pnr['modules']['top']['netnames'].values():
+        if bit in net.get('bits', []):
+            return net.get('attributes', {}).get('ROUTING')
+    return None
+
+def _plla_clkin_sel_from_route(cell, pll_desc):
+    if cell is not None and 'CLKIN' in cell.get('connections', {}):
+        for bit in cell['connections']['CLKIN']:
+            if not isinstance(bit, int):
+                continue
+            routing = _net_routing_for_bit(bit)
+            if not routing:
+                continue
+
+            # Keep this in sync with nextpnr's routed-HCLK PLL INSEL rewrite.
+            if re.search(r'/HCLK_OUT[01](?:[;/]|$)', routing):
+                return 'CLKIN3'
+            if re.search(r'/HCLK_OUT[23](?:[;/]|$)', routing):
+                return 'CLKIN4'
+
+            # GW5A PLLA has a macro input mux in front of the nominal BEL
+            # CLKIN wire. A routed global-clock/spine feed selects macro
+            # CLKIN1, even when the site input alias is PLLACLKINCLK0.
+            if re.search(r'/(?:CLK[0-6]|SPINE\d+)(?:[;/]|$)', routing):
+                return 'CLKIN1'
+
+    # Legacy/unrouted fallback: preserve the v1 behavior for cases where the
+    # nextpnr JSON does not carry ROUTING attributes.
+    return _plla_clkin_sel_from_site(pll_desc)
+
 def _replace_plla_clkin_sel(db, pll_attrs, clkin_sel):
     clkin_sel_id = attrids.pll_attrids['A_CLKIN_SEL']
     clkin_sel_features = {
@@ -4373,7 +4406,7 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
         elif typ.startswith('PLLA'):
             pll_attrs = set_pll_attrs(db, 'PLLA', 0,  parms)
             pll_desc = db.extra_func[row - 1, col - 1]['pll']
-            _replace_plla_clkin_sel(db, pll_attrs, _plla_clkin_sel_from_site(pll_desc))
+            _replace_plla_clkin_sel(db, pll_attrs, _plla_clkin_sel_from_route(cell, pll_desc))
             bits = get_shortval_fuses(db, 1024, pll_attrs, 'PLL')
             slot_bitmap = extra_slots.setdefault(pll_desc['slot_idx'], bitmatrix.zeros(8, 35))
             for r, c in bits:
