@@ -1114,6 +1114,15 @@ def set_pll_attrs(db, typ, idx, attrs):
         add_attr_val(db, 'PLL', fin_attrs, i, 0)
     for attr, val in pll_attrs.items():
         if isinstance(val, str):
+            # yosys-slang encodes string enum params (e.g. "FALSE"/"TRUE"/
+            # "INTERNAL") as packed-ASCII bit-strings, unlike read_verilog which
+            # preserves the literal. Decode such a bit-string back to its enum
+            # before the table lookup (no-op for already-literal values).
+            if val not in attrids.pll_attrvals and len(val) >= 8 and len(val) % 8 == 0 \
+                    and set(val) <= set('01'):
+                dec = ''.join(chr(int(val[i:i + 8], 2)) for i in range(0, len(val), 8))
+                if dec in attrids.pll_attrvals:
+                    val = dec
             val = attrids.pll_attrvals[val]
         add_attr_val(db, 'PLL', fin_attrs, attrids.pll_attrids[attr], val)
     return fin_attrs
