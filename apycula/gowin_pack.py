@@ -365,8 +365,18 @@ _gw5a_plla6_dedicated_clkin_feed[0] = {
             (4, 46), (4, 68), (4, 86), (5, 46), (5, 68), (5, 86), (6, 46), (6, 88), (7, 46), (7, 88),
             (8, 2), (8, 24), (9, 24),
         }
-        | {(2, 2), (2, 4), (2, 8), (2, 53), (3, 2)}
+        # (0,3),(2,51),(3,74): twin-required bits previously set only as a
+        # side effect of $PACKER_GND pips routed through the feed tile (fuse
+        # overlap; (3,74) is half of the LSR2<-X06 pair, (2,72) already in
+        # the base set); stamped deliberately now that those GND pips are
+        # suppressed.
+        | {(0, 3), (2, 2), (2, 4), (2, 8), (2, 51), (2, 53), (3, 2), (3, 74)}
     ),
+    # R29C4 lane-0 functional bits: twin minus the uniform ttyp19 background
+    # (background ref = common bits of clean tiles (28,5)/(28,6)).
+    (28, 3): {
+        (6, 38), (7, 32), (7, 34),
+    },
     (27, 5): {
         (0, 10), (0, 11), (0, 15), (0, 18),
     },
@@ -427,7 +437,7 @@ def _emit_gw5a_plla_dedicated_clkin(tilemap, cell, row, col):
 def get_pips(data):
     pipre = re.compile(r"X(\d+)Y(\d+)/([\w_]+)/([\w_]+)")
     _mark_gw5a_plla_dedicated_clkin_nets(data)
-    for net in data['modules']['top']['netnames'].values():
+    for net_name, net in data['modules']['top']['netnames'].items():
         # NOTE: do NOT skip nets in _gw5a_plla_dedicated_clkin_bits here. The
         # PLLA CLKIN net is usually the design's SHARED main clock; skipping
         # it gutted 456 fabric-routing bits across 122 tiles on the probe and
@@ -438,6 +448,17 @@ def get_pips(data):
         routing = net['attributes']['ROUTING']
         pips = routing.split(';')[1::3]
         for pip in pips:
+            # Slot-6 GW5A PLLA: keep $PACKER_GND out of the PLL feed tile
+            # X3Y27. nextpnr grounds the CLKIN0 input-mux wires there
+            # (CLK1/X04/X06/SEL3 fan-out), corrupting the PLL reference —
+            # HW: P dead/free-run; the HW-locking Gowin twin leaves them
+            # undriven and no logic cell is placed in that tile. ONE net in
+            # ONE tile — NOT the shared-clock-net suppression that once
+            # gutted 456 fabric bits. Twin-required bits that overlapped
+            # GND pip encodings are stamped via the lane-0 feed table.
+            if (_gw5a_plla_dedicated_clkin_lanes and net_name == '$PACKER_GND'
+                    and pip.startswith('X3Y27/')):
+                continue
             res = pipre.fullmatch(pip) # ignore alias
             if res:
                 row, col, src, dest = res.groups()
