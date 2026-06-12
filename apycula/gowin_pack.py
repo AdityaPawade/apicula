@@ -323,15 +323,16 @@ _reg_sd_regs = set()
 
 # GW5A PLLA CLKIN is not physically fed by the fabric spine tail that nextpnr
 # currently routes to the PLL BEL. Gowin bridges a GCLK feed into the left PLLA
-# through a dedicated corridor next to the macro. Track those nets so route()
-# does not emit the disproven fabric tail, then stamp the dedicated feed in
-# place().
-_gw5a_plla_dedicated_clkin_bits = set()
+# through a dedicated corridor next to the macro. Track the routed lane for
+# those nets, then stamp the lane-coherent dedicated feed in place().
+_gw5a_plla_dedicated_clkin_lanes = {}
 
-# Zero-based tile/fuse coordinates. These are the control-isolated PLLA input
-# feed bits for slot-6 left PLLA (Gowin report one-based R28C4/R29C4).
-_gw5a_plla6_dedicated_clkin_feed = {
-    (27, 3): {
+# Zero-based tile/fuse coordinates. The slot-6 left PLLA feed corridor is in
+# R28C4, with a small enable cluster in R28C6. Coordinates are twin-derived
+# from the HW-locking Gowin EDA build top_pllchk (gowin_pllchk.fs md5
+# 707461f8). The chipdb exposes these positions as generic tile pips, not as a
+# named PLLA feed attribute, so the bridge remains a local raw-fuse overlay.
+_gw5a_plla6_dedicated_clkin_feed_lane1_r28c4 = {
         (0, 0), (0, 1), (0, 5), (0, 8),
         (1, 0), (1, 1), (1, 2), (1, 3),
         (2, 0), (2, 1), (2, 5), (2, 20), (2, 24), (2, 50), (2, 61), (2, 72), (2, 73), (2, 75), (2, 94), (2, 95), (2, 97), (2, 98),
@@ -342,11 +343,36 @@ _gw5a_plla6_dedicated_clkin_feed = {
         (7, 43), (7, 47), (7, 65), (7, 69), (7, 85), (7, 89),
         (8, 1), (8, 7), (8, 23), (8, 28), (8, 43), (8, 49), (8, 65), (8, 69), (8, 84), (8, 85), (8, 91), (8, 93),
         (9, 23), (9, 28), (9, 43), (9, 49), (9, 65), (9, 69), (9, 85), (9, 89), (9, 107), (9, 109),
-    },
-    (28, 3): {
-        (0, 46), (0, 47), (0, 51), (1, 54),
+}
+_gw5a_plla6_dedicated_clkin_feed = {
+    1: {
+        (27, 3): _gw5a_plla6_dedicated_clkin_feed_lane1_r28c4,
+        (28, 3): {
+            (0, 46), (0, 47), (0, 51), (1, 54),
+        },
+        (27, 5): {
+            (0, 10), (0, 11), (0, 15), (0, 18),
+        },
     },
 }
+_gw5a_plla6_dedicated_clkin_feed[0] = {
+    (27, 3): (
+        _gw5a_plla6_dedicated_clkin_feed_lane1_r28c4
+        - {
+            (0, 5), (0, 20), (0, 23),
+            (2, 5), (2, 20), (2, 24), (2, 58), (2, 62), (2, 64), (2, 65), (2, 73), (2, 75), (2, 83), (2, 84), (2, 96),
+            (3, 3), (3, 5), (3, 7), (3, 8), (3, 59), (3, 76), (3, 78), (3, 91), (3, 93),
+            (4, 46), (4, 68), (4, 86), (5, 46), (5, 68), (5, 86), (6, 46), (6, 88), (7, 46), (7, 88),
+            (8, 2), (8, 24), (9, 24),
+        }
+        | {(2, 2), (2, 4), (2, 8), (2, 53), (3, 2)}
+    ),
+    (27, 5): {
+        (0, 10), (0, 11), (0, 15), (0, 18),
+    },
+}
+
+_gw5a_plla6_clkin_terminus_re = re.compile(r'X3Y27/CLK([01])(?:[;/]|$)')
 
 def _netname_for_bit(bit):
     for net_name, net in pnr['modules']['top']['netnames'].items():
@@ -354,10 +380,18 @@ def _netname_for_bit(bit):
             return net_name, net
     return None, None
 
+def _gw5a_plla6_clkin_lane_from_routing(routing):
+    if not routing:
+        return None
+    lanes = {int(m.group(1)) for m in _gw5a_plla6_clkin_terminus_re.finditer(routing)}
+    if len(lanes) == 1:
+        return next(iter(lanes))
+    return None
+
 def _mark_gw5a_plla_dedicated_clkin_nets(data):
     if device != 'GW5A-25A':
         return
-    _gw5a_plla_dedicated_clkin_bits.clear()
+    _gw5a_plla_dedicated_clkin_lanes.clear()
     for cell in data['modules']['top']['cells'].values():
         if cell.get('type') != 'PLLA':
             continue
@@ -367,16 +401,24 @@ def _mark_gw5a_plla_dedicated_clkin_nets(data):
         for bit in cell.get('connections', {}).get('CLKIN', []):
             _, net = _netname_for_bit(bit)
             routing = net.get('attributes', {}).get('ROUTING', '') if net else ''
-            if re.search(r'/(?:SPINE\d+|GT[01]0|GBO[01]|GB[0-7]0|CLK[0-6])(?:[;/]|$)', routing):
-                _gw5a_plla_dedicated_clkin_bits.add(bit)
+            lane = _gw5a_plla6_clkin_lane_from_routing(routing)
+            if lane is not None:
+                _gw5a_plla_dedicated_clkin_lanes[bit] = lane
 
 def _emit_gw5a_plla_dedicated_clkin(tilemap, cell, row, col):
     if device != 'GW5A-25A' or row != 28 or col != 1:
         return False
-    if not any(bit in _gw5a_plla_dedicated_clkin_bits
-               for bit in cell.get('connections', {}).get('CLKIN', [])):
+    lanes = {
+        _gw5a_plla_dedicated_clkin_lanes[bit]
+        for bit in cell.get('connections', {}).get('CLKIN', [])
+        if bit in _gw5a_plla_dedicated_clkin_lanes
+    }
+    if not lanes:
         return False
-    for pos, bits in _gw5a_plla6_dedicated_clkin_feed.items():
+    if len(lanes) != 1:
+        raise Exception(f"Ambiguous GW5A slot-6 PLLA CLKIN lanes: {sorted(lanes)}")
+    lane = next(iter(lanes))
+    for pos, bits in _gw5a_plla6_dedicated_clkin_feed[lane].items():
         tile = tilemap[pos]
         for r, c in bits:
             tile[r][c] = 1
@@ -1247,11 +1289,13 @@ def _plla_clkin_sel_from_route(cell, pll_desc):
             if re.search(r'/HCLK_OUT[23](?:[;/]|$)', routing):
                 return 'CLKIN4'
 
-            # GW5A PLLA has a macro input mux in front of the nominal BEL
-            # CLKIN wire. A routed global-clock/spine feed selects macro
-            # CLKIN1, even when the site input alias is PLLACLKINCLK0.
+            if device == 'GW5A-25A' and pll_desc.get('slot_idx') == 6:
+                lane = _gw5a_plla6_clkin_lane_from_routing(routing)
+                if lane is not None:
+                    return f'CLKIN{lane}'
+
             if re.search(r'/(?:CLK[0-6]|SPINE\d+)(?:[;/]|$)', routing):
-                return 'CLKIN1'
+                return _plla_clkin_sel_from_site(pll_desc)
 
     # Legacy/unrouted fallback: preserve the v1 behavior for cases where the
     # nextpnr JSON does not carry ROUTING attributes.
