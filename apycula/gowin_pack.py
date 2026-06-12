@@ -320,9 +320,79 @@ _pip_bels = []
 # direct path. Filled while route() drains get_pips() (which runs before
 # place()); place_dff() reads it to emit REG{z%2}_SD=SIG.
 _reg_sd_regs = set()
+
+# GW5A PLLA CLKIN is not physically fed by the fabric spine tail that nextpnr
+# currently routes to the PLL BEL. Gowin bridges a GCLK feed into the left PLLA
+# through a dedicated corridor next to the macro. Track those nets so route()
+# does not emit the disproven fabric tail, then stamp the dedicated feed in
+# place().
+_gw5a_plla_dedicated_clkin_bits = set()
+
+# Zero-based tile/fuse coordinates. These are the control-isolated PLLA input
+# feed bits for slot-6 left PLLA (Gowin report one-based R28C4/R29C4).
+_gw5a_plla6_dedicated_clkin_feed = {
+    (27, 3): {
+        (0, 0), (0, 1), (0, 5), (0, 8),
+        (1, 0), (1, 1), (1, 2), (1, 3),
+        (2, 0), (2, 1), (2, 5), (2, 20), (2, 24), (2, 50), (2, 61), (2, 72), (2, 73), (2, 75), (2, 94), (2, 95), (2, 97), (2, 98),
+        (3, 0), (3, 1), (3, 3), (3, 5), (3, 8), (3, 50), (3, 52), (3, 60), (3, 61), (3, 63), (3, 71), (3, 72), (3, 75), (3, 78), (3, 94), (3, 95), (3, 97), (3, 98),
+        (4, 1), (4, 7), (4, 23), (4, 28), (4, 43), (4, 47), (4, 65), (4, 69), (4, 85), (4, 91),
+        (5, 1), (5, 7), (5, 23), (5, 28), (5, 43), (5, 47), (5, 65), (5, 69), (5, 85), (5, 91),
+        (6, 43), (6, 47), (6, 65), (6, 69), (6, 85), (6, 89),
+        (7, 43), (7, 47), (7, 65), (7, 69), (7, 85), (7, 89),
+        (8, 1), (8, 7), (8, 23), (8, 28), (8, 43), (8, 49), (8, 65), (8, 69), (8, 84), (8, 85), (8, 91), (8, 93),
+        (9, 23), (9, 28), (9, 43), (9, 49), (9, 65), (9, 69), (9, 85), (9, 89), (9, 107), (9, 109),
+    },
+    (28, 3): {
+        (0, 46), (0, 47), (0, 51), (1, 54),
+    },
+}
+
+def _netname_for_bit(bit):
+    for net_name, net in pnr['modules']['top']['netnames'].items():
+        if bit in net.get('bits', []):
+            return net_name, net
+    return None, None
+
+def _mark_gw5a_plla_dedicated_clkin_nets(data):
+    if device != 'GW5A-25A':
+        return
+    _gw5a_plla_dedicated_clkin_bits.clear()
+    for cell in data['modules']['top']['cells'].values():
+        if cell.get('type') != 'PLLA':
+            continue
+        bel = cell.get('attributes', {}).get('NEXTPNR_BEL', '')
+        if bel != 'X0Y27/PLL':
+            continue
+        for bit in cell.get('connections', {}).get('CLKIN', []):
+            _, net = _netname_for_bit(bit)
+            routing = net.get('attributes', {}).get('ROUTING', '') if net else ''
+            if re.search(r'/(?:SPINE\d+|GT[01]0|GBO[01]|GB[0-7]0|CLK[0-6])(?:[;/]|$)', routing):
+                _gw5a_plla_dedicated_clkin_bits.add(bit)
+
+def _emit_gw5a_plla_dedicated_clkin(tilemap, cell, row, col):
+    if device != 'GW5A-25A' or row != 28 or col != 1:
+        return False
+    if not any(bit in _gw5a_plla_dedicated_clkin_bits
+               for bit in cell.get('connections', {}).get('CLKIN', [])):
+        return False
+    for pos, bits in _gw5a_plla6_dedicated_clkin_feed.items():
+        tile = tilemap[pos]
+        for r, c in bits:
+            tile[r][c] = 1
+    return True
+
 def get_pips(data):
     pipre = re.compile(r"X(\d+)Y(\d+)/([\w_]+)/([\w_]+)")
+    _mark_gw5a_plla_dedicated_clkin_nets(data)
     for net in data['modules']['top']['netnames'].values():
+        # NOTE: do NOT skip nets in _gw5a_plla_dedicated_clkin_bits here. The
+        # PLLA CLKIN net is usually the design's SHARED main clock; skipping
+        # it gutted 456 fabric-routing bits across 122 tiles on the probe and
+        # would kill every fabric clock sink. The fabric tail toward the PLL
+        # is a harmless dead-end; the dedicated feed bits deliver the real
+        # reference. Bare-PLL designs (pll7, private CLKIN net) were a
+        # misleading validation case.
         routing = net['attributes']['ROUTING']
         pips = routing.split(';')[1::3]
         for pip in pips:
@@ -4407,6 +4477,7 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
             pll_attrs = set_pll_attrs(db, 'PLLA', 0,  parms)
             pll_desc = db.extra_func[row - 1, col - 1]['pll']
             _replace_plla_clkin_sel(db, pll_attrs, _plla_clkin_sel_from_route(cell, pll_desc))
+            _emit_gw5a_plla_dedicated_clkin(tilemap, cell, row, col)
             bits = get_shortval_fuses(db, 1024, pll_attrs, 'PLL')
             slot_bitmap = extra_slots.setdefault(pll_desc['slot_idx'], bitmatrix.zeros(8, 35))
             for r, c in bits:
