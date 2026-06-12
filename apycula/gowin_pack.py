@@ -769,8 +769,28 @@ def set_adc_attrs(db, idx, attrs):
     return fin_attrs
 
 # typ - PLL type (RPLL, etc)
+def _decode_slang_pll_str(v):
+    # yosys-slang encodes string-valued params (FCLKIN, CLKFB_SEL, *_EN, *_SEL,
+    # DYN_*, RESET_*_EN, SSC_EN ...) as packed-ASCII bit-strings, unlike
+    # read_verilog which preserves the literal. Numeric divider params
+    # (IDIV_SEL etc.) also arrive as bit-strings but decode to non-printable
+    # bytes, so a printable-ASCII guard distinguishes them safely. Decode the
+    # string enums back to their literal so set_pll_attrs' ==/float() logic and
+    # the VCO/charge-pump frequency math see the correct value (else the PLL is
+    # mis-configured and never locks; HW-confirmed on GW5A-25 via yosys-slang).
+    if isinstance(v, str) and v and len(v) % 8 == 0 and set(v) <= {'0', '1'}:
+        try:
+            s = ''.join(chr(int(v[i:i + 8], 2)) for i in range(0, len(v), 8))
+        except ValueError:
+            return v
+        if re.fullmatch(r'[A-Za-z0-9._+-]+', s):
+            return s
+    return v
+
 def set_pll_attrs(db, typ, idx, attrs):
     attrs_upper(attrs)
+    for _k in list(attrs.keys()):
+        attrs[_k] = _decode_slang_pll_str(attrs[_k])
     if typ not in {'RPLL', 'PLLVR', 'PLLA'}:
         raise Exception(f"PLL type {typ} is not supported for now")
     if typ in {'RPLL', 'PLLVR'}:
@@ -1126,6 +1146,23 @@ def set_pll_attrs(db, typ, idx, attrs):
             val = attrids.pll_attrvals[val]
         add_attr_val(db, 'PLL', fin_attrs, attrids.pll_attrids[attr], val)
     return fin_attrs
+
+def _plla_clkin_sel_from_site(pll_desc):
+    clkin = pll_desc['inputs']['CLKIN']
+    m = re.search(r'CLK([0-6])$', clkin)
+    if not m:
+        raise Exception(f"Can't derive PLLA CLKIN selector from site CLKIN wire {clkin}")
+    return f"CLKIN{m.group(1)}"
+
+def _replace_plla_clkin_sel(db, pll_attrs, clkin_sel):
+    clkin_sel_id = attrids.pll_attrids['A_CLKIN_SEL']
+    clkin_sel_features = {
+        feature
+        for (attr, _), feature in db.logicinfo['PLL'].items()
+        if attr == clkin_sel_id
+    }
+    pll_attrs.difference_update(clkin_sel_features)
+    add_attr_val(db, 'PLL', pll_attrs, clkin_sel_id, attrids.pll_attrvals[clkin_sel])
 
 _dcs_spine2quadrant_idx = {
         'SPINE6'  : ('1', 'DCS6'),
@@ -4335,8 +4372,10 @@ def place(db, tilemap, bels, cst, args, slice_attrvals, extra_slots):
                 tile[r][c] = 1
         elif typ.startswith('PLLA'):
             pll_attrs = set_pll_attrs(db, 'PLLA', 0,  parms)
+            pll_desc = db.extra_func[row - 1, col - 1]['pll']
+            _replace_plla_clkin_sel(db, pll_attrs, _plla_clkin_sel_from_site(pll_desc))
             bits = get_shortval_fuses(db, 1024, pll_attrs, 'PLL')
-            slot_bitmap = extra_slots.setdefault(db.extra_func[row - 1, col - 1]['pll']['slot_idx'], bitmatrix.zeros(8, 35))
+            slot_bitmap = extra_slots.setdefault(pll_desc['slot_idx'], bitmatrix.zeros(8, 35))
             for r, c in bits:
                 slot_bitmap[r][c] = 1
             #for rd in slot_bitmap:
